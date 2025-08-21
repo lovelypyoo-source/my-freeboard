@@ -7,6 +7,7 @@
     body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
     textarea, input { width: 100%; margin-bottom: 10px; }
     textarea { height: 200px; }
+    button { padding:5px 10px; }
   </style>
 </head>
 <body>
@@ -14,22 +15,42 @@
   <input type="text" id="title" placeholder="제목">
   <input type="text" id="author" placeholder="작성자">
   <textarea id="content" placeholder="내용"></textarea>
+  <input type="password" id="password" placeholder="4자리 비밀번호" maxlength="4">
   <button onclick="savePost()">작성 완료</button>
+  <button onclick="editPostPrompt()">수정</button>
 
   <script>
     function savePost(){
       const title = document.getElementById('title').value.trim();
       const author = document.getElementById('author').value.trim();
       const content = document.getElementById('content').value.trim();
-      if(!title || !content){ alert('제목과 내용을 입력하세요'); return; }
+      const password = document.getElementById('password').value.trim();
+      if(!title||!content||password.length!==4){ alert('제목, 내용, 4자리 비밀번호를 모두 입력하세요'); return; }
 
-      const posts = JSON.parse(localStorage.getItem('posts') || '[]');
+      const posts = JSON.parse(localStorage.getItem('posts')||'[]');
       posts.push({
-        title, author, content, date: new Date().toLocaleString(), replies: []
+        title, author, content, password, date: new Date().toLocaleString(), replies:[]
       });
       localStorage.setItem('posts', JSON.stringify(posts));
       alert('글이 작성되었습니다!');
       location.href='index.html';
+    }
+
+    function editPostPrompt(){
+      const pw = prompt('수정할 글의 4자리 비밀번호를 입력하세요:');
+      if(!pw || pw.length!==4){ alert('비밀번호는 4자리여야 합니다'); return; }
+      const posts = JSON.parse(localStorage.getItem('posts')||'[]');
+      const index = posts.findIndex(p => p.password===pw);
+      if(index===-1){ alert('해당 비밀번호로 작성한 글이 없습니다'); return; }
+
+      const p = posts[index];
+      const newTitle = prompt('제목 수정', p.title);
+      const newContent = prompt('내용 수정', p.content);
+      if(newTitle!==null) p.title=newTitle;
+      if(newContent!==null) p.content=newContent;
+      posts[index]=p;
+      localStorage.setItem('posts', JSON.stringify(posts));
+      alert('수정 완료');
     }
   </script>
 </body>
