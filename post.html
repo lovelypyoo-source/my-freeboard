@@ -2,56 +2,77 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>글쓰기</title>
+  <title>글 상세</title>
   <style>
     body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
-    textarea, input { width: 100%; margin-bottom: 10px; }
-    textarea { height: 200px; }
-    button { padding:5px 10px; }
+    .reply { border:1px solid #eee; padding:5px; margin-top:5px; }
+    textarea { width:100%; height:100px; margin-top:10px; }
+    button { padding:5px 10px; margin-top:5px; }
   </style>
 </head>
 <body>
-  <h1>글쓰기</h1>
-  <input type="text" id="title" placeholder="제목">
-  <input type="text" id="author" placeholder="작성자">
-  <textarea id="content" placeholder="내용"></textarea>
-  <input type="password" id="password" placeholder="4자리 비밀번호" maxlength="4">
-  <button onclick="savePost()">작성 완료</button>
-  <button onclick="editPostPrompt()">수정</button>
+  <div id="postArea"></div>
+  <button onclick="location.href='index.html'">목록</button>
+  <textarea id="replyText" placeholder="답글 입력"></textarea><br>
+  <button onclick="addReply()">답글 작성</button>
 
   <script>
-    function savePost(){
-      const title = document.getElementById('title').value.trim();
-      const author = document.getElementById('author').value.trim();
-      const content = document.getElementById('content').value.trim();
-      const password = document.getElementById('password').value.trim();
-      if(!title||!content||password.length!==4){ alert('제목, 내용, 4자리 비밀번호를 모두 입력하세요'); return; }
+    const urlParams = new URLSearchParams(window.location.search);
+    const index = urlParams.get('index');
+    const pw = urlParams.get('pw');
 
-      const posts = JSON.parse(localStorage.getItem('posts')||'[]');
-      posts.push({
-        title, author, content, password, date: new Date().toLocaleString(), replies:[]
-      });
-      localStorage.setItem('posts', JSON.stringify(posts));
-      alert('글이 작성되었습니다!');
+    let posts = JSON.parse(localStorage.getItem('posts')||'[]');
+
+    if(!posts[index] || posts[index].password!==pw){
+      alert('비밀번호가 틀렸거나 글이 존재하지 않습니다');
       location.href='index.html';
     }
 
-    function editPostPrompt(){
-      const pw = prompt('수정할 글의 4자리 비밀번호를 입력하세요:');
-      if(!pw || pw.length!==4){ alert('비밀번호는 4자리여야 합니다'); return; }
-      const posts = JSON.parse(localStorage.getItem('posts')||'[]');
-      const index = posts.findIndex(p => p.password===pw);
-      if(index===-1){ alert('해당 비밀번호로 작성한 글이 없습니다'); return; }
+    const postArea = document.getElementById('postArea');
+    const repliesDiv = document.getElementById('replies');
 
+    function render(){
       const p = posts[index];
-      const newTitle = prompt('제목 수정', p.title);
-      const newContent = prompt('내용 수정', p.content);
-      if(newTitle!==null) p.title=newTitle;
-      if(newContent!==null) p.content=newContent;
-      posts[index]=p;
-      localStorage.setItem('posts', JSON.stringify(posts));
-      alert('수정 완료');
+      postArea.innerHTML = `<h2>${p.title}</h2><p>${p.content}</p><p>작성자: ${p.author||'익명'} | ${p.date}</p>`;
+      postArea.innerHTML += `<button onclick="editPost()">수정</button> <button onclick="deletePost()">삭제</button>`;
+      repliesDiv.innerHTML = '<h3>답글</h3>';
+      p.replies.forEach(r=>{
+        const d=document.createElement('div');
+        d.className='reply';
+        d.textContent=r;
+        repliesDiv.appendChild(d);
+      });
     }
+
+    function editPost(){
+      const newTitle = prompt('제목 수정', posts[index].title);
+      const newContent = prompt('내용 수정', posts[index].content);
+      if(newTitle!==null) posts[index].title=newTitle;
+      if(newContent!==null) posts[index].content=newContent;
+      localStorage.setItem('posts', JSON.stringify(posts));
+      render();
+    }
+
+    function deletePost(){
+      if(confirm('정말 삭제하시겠습니까?')){
+        posts.splice(index,1);
+        localStorage.setItem('posts', JSON.stringify(posts));
+        location.href='index.html';
+      }
+    }
+
+    function addReply(){
+      const reply = document.getElementById('replyText').value.trim();
+      if(!reply) return;
+      posts[index].replies.push(reply);
+      localStorage.setItem('posts', JSON.stringify(posts));
+      document.getElementById('replyText').value='';
+      render();
+    }
+
+    render();
   </script>
+
+  <div id="replies"></div>
 </body>
 </html>
