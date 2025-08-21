@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>나의 자유게시판</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
+    .post { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📝 나의 자유게시판</h1>
+  <div id="posts"></div>
+  <textarea id="newPost" placeholder="글을 입력하세요"></textarea><br>
+  <button onclick="addPost()">글쓰기</button>
+
+  <script>
+    const postsDiv = document.getElementById('posts');
+    const posts = [];
+
+    function render() {
+      postsDiv.innerHTML = '';
+      posts.forEach((p,i)=>{
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `<strong>글 #${i+1}</strong><p>${p}</p>`;
+        postsDiv.appendChild(div);
+      });
+    }
+
+    function addPost() {
+      const text = document.getElementById('newPost').value.trim();
+      if(text){ posts.push(text); document.getElementById('newPost').value=''; render(); }
+    }
+
+    render();
+  </script>
+</body>
+</html>
