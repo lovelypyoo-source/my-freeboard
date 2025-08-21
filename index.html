@@ -2,16 +2,19 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>나의 자유게시판</title>
+  <title>자유게시판</title>
   <style>
     body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
     .post { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; cursor: pointer; }
-    button { padding: 5px 10px; margin-bottom: 20px; }
+    button { padding: 5px 10px; margin-right: 10px; }
+    input { width: 100px; }
   </style>
 </head>
 <body>
-  <h1>📝 나의 자유게시판</h1>
+  <h1>📝 자유게시판</h1>
   <button onclick="location.href='write.html'">글쓰기</button>
+  <button onclick="showPasswordPrompt()">조회</button>
+
   <div id="posts"></div>
 
   <script>
@@ -22,12 +25,20 @@
       postsDiv.innerHTML = '';
       posts.forEach((p,i)=>{
         const div = document.createElement('div');
-        div.className = 'post';
-        div.innerHTML = `<strong>${p.title}</strong><br>작성자: ${p.author || '익명'}<br>${p.date}`;
-        div.onclick = ()=>{ location.href='post.html?index='+i; };
+        div.className='post';
+        div.innerHTML = `<strong>${p.title}</strong> | 작성자: ${p.author || '익명'} | ${p.date}`;
         postsDiv.appendChild(div);
       });
     }
+
+    function showPasswordPrompt(){
+      const pw = prompt('4자리 비밀번호를 입력하세요:');
+      if(!pw || pw.length!==4){ alert('비밀번호는 4자리여야 합니다'); return; }
+      const index = posts.findIndex(p => p.password === pw);
+      if(index===-1){ alert('해당 비밀번호로 작성한 글이 없습니다'); return; }
+      location.href = 'post.html?index='+index+'&pw='+pw;
+    }
+
     render();
   </script>
 </body>
