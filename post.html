@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>글 상세</title>
+  <style>
+    body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
+    .reply { border:1px solid #eee; padding:5px; margin-top:5px; }
+    textarea { width:100%; height:100px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div id="postArea"></div>
+  <button onclick="location.href='index.html'">목록</button>
+  <button onclick="editPost()">수정</button>
+  <button onclick="deletePost()">삭제</button>
+
+  <h3>답글 달기</h3>
+  <textarea id="replyText"></textarea><br>
+  <button onclick="addReply()">답글 작성</button>
+  <div id="replies"></div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const index = urlParams.get('index');
+    let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+    const postArea = document.getElementById('postArea');
+    const repliesDiv = document.getElementById('replies');
+
+    function render() {
+      if(!posts[index]) { alert('글이 존재하지 않습니다'); location.href='index.html'; }
+      const p = posts[index];
+      postArea.innerHTML = `<h2>${p.title}</h2><p>${p.content}</p><p>작성자: ${p.author || '익명'} | ${p.date}</p>`;
+      repliesDiv.innerHTML = '';
+      p.replies.forEach(r=>{
+        const d = document.createElement('div');
+        d.className='reply';
+        d.textContent = r;
+        repliesDiv.appendChild(d);
+      });
+    }
+
+    function editPost(){
+      const newContent = prompt('수정할 내용을 입력하세요', posts[index].content);
+      if(newContent !== null){ posts[index].content=newContent; localStorage.setItem('posts', JSON.stringify(posts)); render(); }
+    }
+
+    function deletePost(){
+      if(confirm('정말 삭제하시겠습니까?')){
+        posts.splice(index,1);
+        localStorage.setItem('posts', JSON.stringify(posts));
+        location.href='index.html';
+      }
+    }
+
+    function addReply(){
+      const reply = document.getElementById('replyText').value.trim();
+      if(!reply) return;
+      posts[index].replies.push(reply);
+      localStorage.setItem('posts', JSON.stringify(posts));
+      document.getElementById('replyText').value='';
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
