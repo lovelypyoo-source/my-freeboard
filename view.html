@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>글 조회 - 자유게시판</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    button { margin: 5px; padding: 10px; }
+    .comment { border-top: 1px solid #ddd; margin-top: 10px; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>글 조회</h1>
+  <div id="postArea"></div>
+  <button onclick="increaseViews()">확인</button>
+  <button onclick="enableEdit()">수정</button>
+  <button onclick="location.href='index.html'">돌아가기</button>
+
+  <h3>댓글</h3>
+  <div id="commentList"></div>
+  <textarea id="adminComment" rows="3" placeholder="관리자만 댓글 작성 가능"></textarea>
+  <button onclick="addComment()">댓글 달기</button>
+
+  <script>
+    const pw = localStorage.getItem("viewPassword");
+    const postKey = "post_" + pw;
+    let post = JSON.parse(localStorage.getItem(postKey));
+
+    const postArea = document.getElementById("postArea");
+    if (!post) {
+      postArea.innerHTML = "<p>해당 비밀번호의 글이 없습니다.</p>";
+    } else {
+      renderPost();
+    }
+
+    function renderPost() {
+      postArea.innerHTML = `
+        <h2>${post.title}</h2>
+        <p>${post.content}</p>
+        <p><strong>조회수:</strong> ${post.views}</p>
+      `;
+      renderComments();
+    }
+
+    function increaseViews() {
+      post.views++;
+      localStorage.setItem(postKey, JSON.stringify(post));
+      renderPost();
+    }
+
+    function enableEdit() {
+      const newTitle = prompt("새 제목을 입력하세요", post.title);
+      const newContent = prompt("새 내용을 입력하세요", post.content);
+      if (newTitle && newContent) {
+        post.title = newTitle;
+        post.content = newContent;
+        localStorage.setItem(postKey, JSON.stringify(post));
+        renderPost();
+      }
+    }
+
+    function renderComments() {
+      const list = document.getElementById("commentList");
+      list.innerHTML = "";
+      post.comments.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "comment";
+        div.textContent = c;
+        list.appendChild(div);
+      });
+    }
+
+    function addComment() {
+      const comment = document.getElementById("adminComment").value;
+      if (!comment) return;
+      post.comments.push("[관리자] " + comment);
+      localStorage.setItem(postKey, JSON.stringify(post));
+      document.getElementById("adminComment").value = "";
+      renderComments();
+    }
+  </script>
+</body>
+</html>
