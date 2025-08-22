@@ -4,22 +4,160 @@
   <meta charset="UTF-8">
   <title>자유게시판</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    button { margin: 5px; padding: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      margin-top: 50px;
+      display: inline-block;
+      text-align: center;
+      position: relative;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    .button-container {
+      margin: 20px 0;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .top-right {
+      position: absolute;
+      top: -20px;
+      right: -100px;
+      width: 120px;
+    }
+    .bottom-logo {
+      margin-top: 30px;
+      width: 250px;
+    }
   </style>
 </head>
 <body>
-  <h1>자유게시판</h1>
-  <button onclick="location.href='write.html'">글쓰기</button>
-  <button onclick="showPasswordPrompt()">조회</button>
+  <div class="container">
+    <h1>자유게시판</h1>
+
+    <!-- 그림1 오른쪽 위 -->
+    <img src="그림1.png" alt="캐릭터" class="top-right">
+
+    <div class="button-container">
+      <button onclick="showWriteForm()">글쓰기</button>
+      <button onclick="showReadForm()">조회</button>
+    </div>
+
+    <!-- 그림2 버튼 밑 -->
+    <img src="그림2.png" alt="도로교통공단 로고" class="bottom-logo">
+
+    <div id="content"></div>
+  </div>
 
   <script>
-    function showPasswordPrompt() {
-      const pw = prompt("글 작성 시 입력한 4자리 비밀번호를 입력하세요");
-      if (pw) {
-        localStorage.setItem("viewPassword", pw);
-        location.href = "view.html";
+    let posts = []; // 게시글 저장
+
+    // 글쓰기 화면
+    function showWriteForm() {
+      document.getElementById("content").innerHTML = `
+        <h2>글쓰기</h2>
+        <textarea id="postContent" rows="5" cols="40" placeholder="내용을 입력하세요"></textarea><br><br>
+        <input type="password" id="postPassword" maxlength="4" placeholder="4자리 비밀번호"><br><br>
+        <button onclick="savePost()">입력완료</button>
+      `;
+    }
+
+    // 글 저장
+    function savePost() {
+      const content = document.getElementById("postContent").value;
+      const password = document.getElementById("postPassword").value;
+
+      if (!content || password.length !== 4) {
+        alert("내용과 4자리 비밀번호를 입력해주세요.");
+        return;
       }
+
+      posts.push({ content, password, views: 0, comments: [] });
+      alert("글이 저장되었습니다!");
+      document.getElementById("content").innerHTML = "";
+    }
+
+    // 조회 화면
+    function showReadForm() {
+      document.getElementById("content").innerHTML = `
+        <h2>글 조회</h2>
+        <input type="password" id="searchPassword" maxlength="4" placeholder="4자리 비밀번호"><br><br>
+        <button onclick="readPost()">확인</button>
+      `;
+    }
+
+    // 글 조회
+    function readPost() {
+      const password = document.getElementById("searchPassword").value;
+      const post = posts.find(p => p.password === password);
+
+      if (!post) {
+        alert("해당 비밀번호의 글이 없습니다.");
+        return;
+      }
+
+      post.views++;
+      document.getElementById("content").innerHTML = `
+        <h2>작성한 글</h2>
+        <p>${post.content}</p>
+        <p>조회수: ${post.views}</p>
+        <button onclick="editPost('${password}')">수정</button>
+        <button onclick="showReadForm()">뒤로가기</button>
+        <h3>댓글</h3>
+        <div id="comments">${post.comments.map(c => `<p>- ${c}</p>`).join("")}</div>
+        <textarea id="commentInput" rows="2" cols="30" placeholder="관리자 댓글 입력"></textarea><br>
+        <button onclick="addComment('${password}')">댓글 달기</button>
+      `;
+    }
+
+    // 글 수정
+    function editPost(password) {
+      const post = posts.find(p => p.password === password);
+
+      document.getElementById("content").innerHTML = `
+        <h2>글 수정</h2>
+        <textarea id="editContent" rows="5" cols="40">${post.content}</textarea><br><br>
+        <button onclick="saveEdit('${password}')">수정 완료</button>
+      `;
+    }
+
+    function saveEdit(password) {
+      const post = posts.find(p => p.password === password);
+      post.content = document.getElementById("editContent").value;
+      alert("글이 수정되었습니다!");
+      readPost(); // 수정 후 다시 조회 화면
+    }
+
+    // 댓글 추가
+    function addComment(password) {
+      const comment = document.getElementById("commentInput").value;
+      const post = posts.find(p => p.password === password);
+
+      if (!comment) {
+        alert("댓글을 입력해주세요.");
+        return;
+      }
+
+      post.comments.push(comment);
+      readPost(); // 댓글 추가 후 갱신
     }
   </script>
 </body>
