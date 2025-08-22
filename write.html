@@ -2,55 +2,56 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>글쓰기</title>
+  <title>글쓰기 - 자유게시판</title>
   <style>
-    body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
-    textarea, input { width: 100%; margin-bottom: 10px; }
-    textarea { height: 200px; }
-    button { padding:5px 10px; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, textarea { display: block; margin: 10px 0; width: 100%; padding: 8px; }
+    button { margin: 5px; padding: 10px; }
   </style>
 </head>
 <body>
   <h1>글쓰기</h1>
-  <input type="text" id="title" placeholder="제목">
-  <input type="text" id="author" placeholder="작성자">
-  <textarea id="content" placeholder="내용"></textarea>
-  <input type="password" id="password" placeholder="4자리 비밀번호" maxlength="4">
-  <button onclick="savePost()">작성 완료</button>
-  <button onclick="editPostPrompt()">수정</button>
+  <input id="title" type="text" placeholder="제목을 입력하세요">
+  <textarea id="content" rows="10" placeholder="내용을 입력하세요"></textarea>
+  <input id="password" type="password" maxlength="4" placeholder="4자리 비밀번호 입력">
+
+  <button onclick="savePost()">입력완료</button>
+  <button onclick="editPost()">수정</button>
+  <button onclick="location.href='index.html'">돌아가기</button>
 
   <script>
-    function savePost(){
-      const title = document.getElementById('title').value.trim();
-      const author = document.getElementById('author').value.trim();
-      const content = document.getElementById('content').value.trim();
-      const password = document.getElementById('password').value.trim();
-      if(!title||!content||password.length!==4){ alert('제목, 내용, 4자리 비밀번호를 모두 입력하세요'); return; }
+    function savePost() {
+      const title = document.getElementById("title").value;
+      const content = document.getElementById("content").value;
+      const password = document.getElementById("password").value;
 
-      const posts = JSON.parse(localStorage.getItem('posts')||'[]');
-      posts.push({
-        title, author, content, password, date: new Date().toLocaleString(), replies:[]
-      });
-      localStorage.setItem('posts', JSON.stringify(posts));
-      alert('글이 작성되었습니다!');
-      location.href='index.html';
+      if (!title || !content || password.length !== 4) {
+        alert("제목, 내용, 비밀번호(4자리)를 모두 입력하세요");
+        return;
+      }
+
+      const post = {
+        title, content, password,
+        views: 0,
+        comments: []
+      };
+
+      localStorage.setItem("post_" + password, JSON.stringify(post));
+      alert("글이 저장되었습니다!");
+      location.href = "index.html";
     }
 
-    function editPostPrompt(){
-      const pw = prompt('수정할 글의 4자리 비밀번호를 입력하세요:');
-      if(!pw || pw.length!==4){ alert('비밀번호는 4자리여야 합니다'); return; }
-      const posts = JSON.parse(localStorage.getItem('posts')||'[]');
-      const index = posts.findIndex(p => p.password===pw);
-      if(index===-1){ alert('해당 비밀번호로 작성한 글이 없습니다'); return; }
-
-      const p = posts[index];
-      const newTitle = prompt('제목 수정', p.title);
-      const newContent = prompt('내용 수정', p.content);
-      if(newTitle!==null) p.title=newTitle;
-      if(newContent!==null) p.content=newContent;
-      posts[index]=p;
-      localStorage.setItem('posts', JSON.stringify(posts));
-      alert('수정 완료');
+    function editPost() {
+      const password = prompt("수정할 글의 비밀번호 4자리를 입력하세요");
+      if (!password) return;
+      const post = JSON.parse(localStorage.getItem("post_" + password));
+      if (!post) {
+        alert("해당 비밀번호의 글이 없습니다.");
+        return;
+      }
+      document.getElementById("title").value = post.title;
+      document.getElementById("content").value = post.content;
+      document.getElementById("password").value = password;
     }
   </script>
 </body>
