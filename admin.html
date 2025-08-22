@@ -3,95 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <title>관리자 페이지</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body { text-align:center; font-family:Arial; }
-    table { margin:20px auto; border-collapse:collapse; width:80%; }
-    th, td { border:1px solid #ccc; padding:8px; }
-    .pagination button { margin:3px; }
-    .reply-box { margin-top:10px; }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .post { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    textarea { width: 100%; height: 80px; }
+    button { margin: 5px; }
   </style>
 </head>
 <body>
-  <h1>관리자 전용 게시판 관리</h1>
-  <input type="password" id="adminPass" placeholder="관리자 비밀번호 입력">
-  <button onclick="loginAdmin()">접속</button>
-  <div id="adminPanel" style="display:none;">
-    <button onclick="downloadExcel()">엑셀 다운로드</button>
-    <div id="postList"></div>
-    <div class="pagination" id="pagination"></div>
+  <h1>관리자 페이지</h1>
+  <div id="login">
+    <input type="password" id="adminPw" placeholder="관리자 비밀번호">
+    <button onclick="checkAdmin()">로그인</button>
   </div>
-<script src="script.js"></script>
-<script>
-const ADMIN_PASSWORD = "dobong09!"; // 관리자 비밀번호 설정
+  <div id="adminPanel" style="display:none;">
+    <button onclick="exportExcel()">엑셀로 내보내기</button>
+    <div id="posts"></div>
+    <div id="pagination"></div>
+  </div>
 
-function loginAdmin(){
-  const pw = document.getElementById("adminPass").value;
-  if(pw === ADMIN_PASSWORD){
-    document.getElementById("adminPanel").style.display = "block";
-  } else {
-    alert("비밀번호가 틀렸습니다.");
-  }
-}
+  <script>
+    let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+    let currentPage = 1;
+    const perPage = 10;
 
-function renderPosts(page=1){
-  const posts = JSON.parse(localStorage.getItem("posts")||"[]");
-  const start = (page-1)*10;
-  const end = start+10;
-  const list = posts.slice(start,end);
+    function checkAdmin() {
+      const pw = document.getElementById("adminPw").value;
+      if (pw === "dobong09!") {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("adminPanel").style.display = "block";
+        renderPosts();
+      } else {
+        alert("비밀번호가 틀렸습니다.");
+      }
+    }
 
-  let html = "<table><tr><th>제목</th><th>내용</th><th>조회수</th><th>관리</th></tr>";
-  list.forEach((post,i)=>{
-    html += `<tr>
-      <td>${post.title}</td>
-      <td>${post.content}</td>
-      <td>${post.views||0}</td>
-      <td>
-        <button onclick="replyPost(${start+i})">답글</button>
-        <button onclick="deletePost(${start+i})">삭제</button>
-      </td>
-    </tr>`;
-  });
-  html += "</table>";
-  document.getElementById("postList").innerHTML = html;
+    function renderPosts() {
+      const start = (currentPage - 1) * perPage;
+      const end = start + perPage;
+      const pagePosts = posts.slice(start, end);
 
-  // 페이지네이션
-  let totalPages = Math.ceil(posts.length/10);
-  let pHtml="";
-  for(let i=1;i<=totalPages;i++){
-    pHtml += `<button onclick="renderPosts(${i})">${i}</button>`;
-  }
-  document.getElementById("pagination").innerHTML = pHtml;
-}
+      document.getElementById("posts").innerHTML = pagePosts.map((p, i) => `
+        <div class="post">
+          <p><b>내용:</b> ${p.content}</p>
+          <p><b>조회수:</b> ${p.views}</p>
+          <div><b>댓글:</b> ${p.comments.join(", ")}</div>
+          <textarea id="reply${start+i}" placeholder="답글 작성"></textarea>
+          <button onclick="addReply(${start+i})">답글달기</button>
+          <button onclick="deletePost(${start+i})">삭제</button>
+        </div>
+      `).join("");
 
-function replyPost(index){
-  let reply = prompt("답글 내용을 입력하세요:");
-  if(reply){
-    let posts = JSON.parse(localStorage.getItem("posts")||"[]");
-    posts[index].reply = reply;
-    localStorage.setItem("posts", JSON.stringify(posts));
-    renderPosts();
-  }
-}
+      const totalPages = Math.ceil(posts.length / perPage);
+      document.getElementById("pagination").innerHTML =
+        Array.from({length: totalPages}, (_, i) => `
+          <button onclick="goPage(${i+1})">${i+1}</button>
+        `).join("");
+    }
 
-function deletePost(index){
-  if(confirm("정말 삭제하시겠습니까?")){
-    let posts = JSON.parse(localStorage.getItem("posts")||"[]");
-    posts.splice(index,1);
-    localStorage.setItem("posts", JSON.stringify(posts));
-    renderPosts();
-  }
-}
+    function goPage(p) {
+      currentPage = p;
+      renderPosts();
+    }
 
-function downloadExcel(){
-  let posts = JSON.parse(localStorage.getItem("posts")||"[]");
-  let ws = XLSX.utils.json_to_sheet(posts);
-  let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Posts");
-  XLSX.writeFile(wb, "게시판.xlsx");
-}
+    function addReply(i) {
+      const reply = document.getElementById("reply"+i).value;
+      if (!reply) return;
+      posts[i].comments.push(reply);
+      savePosts();
+      renderPosts();
+    }
 
-</script>
+    function deletePost(i) {
+      if (!confirm("정말 삭제하시겠습니까?")) return;
+      posts.splice(i, 1);
+      savePosts();
+      renderPosts();
+    }
+
+    function savePosts() {
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
+
+    function exportExcel() {
+      let csv = "내용,조회수,댓글\n";
+      posts.forEach(p => {
+        csv += `"${p.content}",${p.views},"${p.comments.join("; ")}"\n`;
+      });
+      const blob = new Blob([csv], {type:"text/csv"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "posts.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
 </body>
 </html>
