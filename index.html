@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>자유 게시판</title>
+  <title>나의 게시판</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {
@@ -10,6 +10,7 @@
       margin: 0;
       padding: 0;
       text-align: center;
+      background-color: #fafafa;
     }
     header {
       display: flex;
@@ -21,13 +22,12 @@
     }
     header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 26px;
       color: #333;
     }
     header img {
-      height: 40px;
+      height: 35px;
       margin-left: 10px;
-      vertical-align: middle;
     }
     main {
       margin: 30px auto;
@@ -35,7 +35,7 @@
     }
     #board {
       margin: 20px 0;
-      padding: 10px;
+      padding: 15px;
       border: 1px solid #ddd;
       min-height: 150px;
       background: #fff;
@@ -61,15 +61,17 @@
       margin-top: 40px;
     }
     footer img {
+      max-width: 400px;
       width: 100%;
-      display: block;
+      height: auto;
+      margin: 0 auto;
     }
   </style>
 </head>
 <body>
   <!-- 상단 제목 + 그림1 -->
   <header>
-    <h1>자유 게시판</h1>
+    <h1>나의 게시판</h1>
     <img src="그림1.png" alt="로고">
   </header>
 
