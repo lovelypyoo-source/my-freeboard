@@ -2,181 +2,93 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>자유게시판</title>
+  <title>자유 게시판</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     body {
-      font-family: "Noto Sans KR", sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      text-align: center;
+    }
+    header {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      background-color: #f5f5f5;
-    }
-    .container {
-      width: 95%;
-      max-width: 800px; /* PC, 모바일 동일하게 통일 */
-      background: white;
       padding: 20px;
-      text-align: center;
-      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-      border-radius: 12px;
+      background-color: #f4f4f4;
+      border-bottom: 1px solid #ddd;
     }
-    h1 {
-      margin-bottom: 20px;
-      font-size: 2rem;
+    header h1 {
+      margin: 0;
+      font-size: 28px;
       color: #333;
     }
+    header img {
+      height: 40px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    main {
+      margin: 30px auto;
+      max-width: 800px;
+    }
+    #board {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      min-height: 150px;
+      background: #fff;
+    }
+    .btn-group {
+      margin: 20px 0;
+    }
     button {
-      margin: 10px;
-      padding: 12px 20px;
-      font-size: 1rem;
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #007bff;
+      border-radius: 5px;
+      background-color: #4CAF50;
       color: white;
+      cursor: pointer;
+      transition: 0.3s;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #45a049;
     }
-    textarea, input {
+    footer {
+      margin-top: 40px;
+    }
+    footer img {
       width: 100%;
-      max-width: 100%;
-      margin: 10px 0;
-      padding: 12px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-    .top-right-img {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 80px;
-      height: auto;
-    }
-    .bottom-img {
-      margin-top: 20px;
-      width: 180px;
-      height: auto;
-    }
-    /* 반응형 → 모바일에서도 PC와 동일하게 보이도록 */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.6rem;
-      }
-      button {
-        width: 100%;
-        font-size: 1rem;
-      }
-      .top-right-img {
-        width: 60px;
-        top: 10px;
-        right: 10px;
-      }
-      .bottom-img {
-        width: 150px;
-      }
+      display: block;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- 게시판 제목 -->
-    <h1>자유게시판</h1>
+  <!-- 상단 제목 + 그림1 -->
+  <header>
+    <h1>자유 게시판</h1>
+    <img src="그림1.png" alt="로고">
+  </header>
 
-    <!-- 오른쪽 상단 이미지 -->
-    <img src="그림1.png" alt="그림1" class="top-right-img">
+  <!-- 메인 게시판 영역 -->
+  <main>
+    <div id="board">게시글이 여기에 표시됩니다.</div>
 
-    <!-- 메인 버튼 -->
-    <button onclick="showWrite()">글쓰기</button>
-    <button onclick="showRead()">조회</button>
+    <div class="btn-group">
+      <button onclick="location.href='write.html'">글쓰기</button>
+      <button onclick="location.href='view.html'">조회</button>
+      <button onclick="location.href='admin.html'">관리자</button>
+    </div>
+  </main>
 
-    <!-- 아래쪽 이미지 -->
-    <img src="그림2.png" alt="그림2" class="bottom-img">
+  <!-- 하단 그림2 -->
+  <footer>
+    <img src="그림2.png" alt="하단 배너">
+  </footer>
 
-    <div id="content"></div>
-  </div>
-
-  <script>
-    let posts = [];
-    function showWrite() {
-      document.getElementById("content").innerHTML = `
-        <h2>글쓰기</h2>
-        <textarea id="postText" rows="8" placeholder="여기에 글을 작성하세요"></textarea><br>
-        <input type="password" id="postPw" maxlength="4" placeholder="4자리 비밀번호 입력"><br>
-        <button onclick="savePost()">입력완료</button>
-      `;
-    }
-    function savePost() {
-      const text = document.getElementById("postText").value;
-      const pw = document.getElementById("postPw").value;
-      if (text && pw.length === 4) {
-        posts.push({ text, pw, views: 0, comments: [] });
-        alert("글이 저장되었습니다!");
-        document.getElementById("content").innerHTML = "";
-      } else {
-        alert("내용과 4자리 비밀번호를 입력하세요.");
-      }
-    }
-    function showRead() {
-      document.getElementById("content").innerHTML = `
-        <h2>글 조회</h2>
-        <input type="password" id="readPw" maxlength="4" placeholder="비밀번호 입력"><br>
-        <button onclick="readPost()">확인</button>
-      `;
-    }
-    function readPost() {
-      const pw = document.getElementById("readPw").value;
-      const post = posts.find(p => p.pw === pw);
-      if (post) {
-        post.views++;
-        document.getElementById("content").innerHTML = `
-          <h2>내 글</h2>
-          <p><strong>내용:</strong> ${post.text}</p>
-          <p><strong>조회수:</strong> ${post.views}</p>
-          <textarea id="commentText" placeholder="댓글 달기"></textarea><br>
-          <button onclick="addComment('${pw}')">댓글 추가</button>
-          <h3>댓글 목록</h3>
-          <ul>${post.comments.map(c => `<li>${c}</li>`).join("")}</ul>
-          <br>
-          <button onclick="editPost('${pw}')">수정</button>
-        `;
-      } else {
-        alert("해당 비밀번호의 글이 없습니다.");
-      }
-    }
-    function editPost(pw) {
-      const post = posts.find(p => p.pw === pw);
-      if (post) {
-        document.getElementById("content").innerHTML = `
-          <h2>글 수정</h2>
-          <textarea id="editText" rows="8">${post.text}</textarea><br>
-          <button onclick="saveEdit('${pw}')">수정완료</button>
-        `;
-      }
-    }
-    function saveEdit(pw) {
-      const post = posts.find(p => p.pw === pw);
-      if (post) {
-        post.text = document.getElementById("editText").value;
-        alert("수정되었습니다!");
-        readPost();
-      }
-    }
-    function addComment(pw) {
-      const post = posts.find(p => p.pw === pw);
-      const comment = document.getElementById("commentText").value;
-      if (post && comment) {
-        post.comments.push(comment);
-        alert("댓글이 추가되었습니다!");
-        readPost();
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
