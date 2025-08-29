@@ -24,24 +24,24 @@
       align-items: center;
       justify-content: center;
       background: #f5f5f5;
-      padding: 75px; /* 5배 확대 */
+      padding: 75px;
       flex-wrap: wrap;
     }
     header h1 {
       margin: 0;
-      font-size: 160px; /* 32px * 5 */
+      font-size: 160px;
     }
     header img {
       margin-left: 50px; 
-      height: 250px; /* 50px * 5 */
+      height: 250px;
     }
 
     .main-box {
-      margin: 100px auto; /* 기존 20px * 5 */
+      margin: 100px auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 100px; /* 기존 20px * 5 */
+      gap: 100px;
       padding: 0 50px;
     }
 
@@ -49,9 +49,9 @@
       position: relative;
       background: #fff;
       border: 2px solid #ddd;
-      border-radius: 75px; /* 15px * 5 */
-      padding: 175px 125px 125px 125px; /* 기존 35px 25px 25px 25px */
-      font-size: 120px; /* 24px * 5 */
+      border-radius: 75px;
+      padding: 175px 125px 125px 125px;
+      font-size: 120px;
       font-weight: bold;
       max-width: 95%;
       box-shadow: 2px 2px 40px rgba(0,0,0,0.1);
@@ -59,9 +59,9 @@
     .speech-bubble::after {
       content: "";
       position: absolute;
-      bottom: -100px; /* 20px*5 */
-      left: 200px; /* 40px*5 */
-      border-width: 100px 100px 0; /* 20px*5 */
+      bottom: -100px;
+      left: 200px;
+      border-width: 100px 100px 0;
       border-style: solid;
       border-color: #fff transparent transparent transparent;
       filter: drop-shadow(5px 10px 10px rgba(0,0,0,0.1));
@@ -70,12 +70,12 @@
     .buttons {
       display: flex;
       justify-content: center;
-      gap: 75px; /* 15px*5 */
+      gap: 75px;
       flex-wrap: wrap;
     }
     button {
-      font-size: 90px; /* 18px*5 */
-      padding: 75px 150px; /* 15px 30px *5 */
+      font-size: 90px;
+      padding: 75px 150px;
       border: none;
       border-radius: 40px;
       background: #4CAF50;
@@ -87,9 +87,10 @@
       background: #45a049;
     }
 
+    /* 그림2만 1/5배 크기 (원래 크기) */
     .main-image {
-      max-width: 500%; /* 5배 */
-      width: 450%; /* 90%*5 */
+      max-width: 90%;
+      width: 90%;
       height: auto;
       margin-top: 50px;
       border-radius: 60px;
@@ -258,6 +259,7 @@
     }
 
     function confirmPost(pw) { alert("조회 확인!"); }
+
     function addComment(pw) {
       const input = document.getElementById(`commentInput_${pw}`);
       const post = posts.find(p => p.pw === pw);
