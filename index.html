@@ -70,9 +70,16 @@ footer { margin-top:60px; }
   .comments { font-size:18px; padding-left:15px; }
   .comment-form input { font-size:18px; padding:12px; }
   .comment-form button { font-size:18px; padding:10px 20px; }
-  #forms textarea { width:100%; height:180px; font-size:18px; padding:12px; }
+  #forms textarea { width:100%; height:250px; font-size:18px; padding:12px; }
   #forms input[type="password"] { font-size:18px; padding:10px; width:100%; }
   #forms button { font-size:18px; padding:12px 25px; }
+}
+
+/* PC에서 textarea 크게 */
+@media (min-width:769px) {
+  #forms textarea { width:100%; height:300px; font-size:20px; padding:15px; }
+  #forms input[type="password"] { font-size:20px; padding:12px; width:100%; }
+  #forms button { font-size:20px; padding:15px 30px; }
 }
 </style>
 </head>
