@@ -4,49 +4,70 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 <style>
-body { font-family: Arial,sans-serif; padding:20px; }
-h1 { text-align:center; }
-.post{border:1px solid #ccc;padding:20px;margin:15px 0;font-size:18px;}
-textarea{width:100%;height:200px;font-size:18px;}
-input[type=text]{padding:10px;font-size:16px;}
-button{padding:10px 15px;font-size:16px;cursor:pointer;margin-top:5px;}
-.comment-form{margin-top:10px;display:flex;gap:5px;}
-.comment-form input{flex:1;padding:10px;font-size:16px;}
+body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
+h1 { text-align:center; margin-bottom:30px; }
+table { width:100%; border-collapse: collapse; }
+th, td { border:1px solid #ccc; padding:10px; text-align:left; vertical-align:top; }
+th { background:#f0f0f0; font-size:18px; }
+td textarea { width:100%; height:120px; font-size:16px; }
+td input[type=text] { width:80%; padding:5px; font-size:14px; }
+td button { padding:6px 12px; font-size:14px; margin:2px; cursor:pointer; }
+.comments { margin-top:5px; padding-left:10px; border-left:2px solid #ccc; }
+.comments p { margin:2px 0; }
 </style>
 </head>
 <body>
-<h1>관리자 페이지</h1>
-<div id="posts"></div>
+<h1>관리자 페이지 - 전체 게시판</h1>
+
+<table id="postsTable">
+  <thead>
+    <tr>
+      <th>글 번호</th>
+      <th>내용</th>
+      <th>조회수</th>
+      <th>댓글</th>
+      <th>관리</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
 
 <script>
+// 로컬스토리지에서 글 가져오기
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-// 렌더링 (모든 글 게시판 형태)
-function renderPosts(){
-  const postsDiv = document.getElementById("posts");
-  postsDiv.innerHTML = "";
-  posts.forEach(p=>{
-    const div = document.createElement("div");
-    div.className="post";
-    div.innerHTML=`
-      <textarea id="editContent_${p.id}">${p.content}</textarea>
-      <p>조회수: ${p.views}</p>
-      <div class="comments">
-        <h4>댓글</h4>
-        ${p.comments.map(c=>`<p>- ${c}</p>`).join("")}
-      </div>
-      <div class="comment-form">
+// 게시판 렌더링
+function renderPosts() {
+  const tbody = document.querySelector("#postsTable tbody");
+  tbody.innerHTML = "";
+
+  posts.forEach((p, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${index+1}</td>
+      <td>
+        <textarea id="editContent_${p.id}">${p.content}</textarea>
+      </td>
+      <td>${p.views}</td>
+      <td>
+        <div class="comments">
+          ${p.comments.map(c=>`<p>- ${c}</p>`).join('')}
+        </div>
         <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
         <button onclick="addComment('${p.id}')">댓글 등록</button>
-      </div>
-      <button onclick="savePost('${p.id}')">저장</button>
-      <button onclick="deletePost('${p.id}')">삭제</button>
+      </td>
+      <td>
+        <button onclick="savePost('${p.id}')">저장</button>
+        <button onclick="deletePost('${p.id}')">삭제</button>
+      </td>
     `;
-    postsDiv.appendChild(div);
+    tbody.appendChild(tr);
   });
 }
 
-function addComment(id){
+// 댓글 등록
+function addComment(id) {
   const input = document.getElementById(`commentInput_${id}`);
   const post = posts.find(p=>p.id==id);
   if(!post || !input.value.trim()) return;
@@ -56,7 +77,8 @@ function addComment(id){
   renderPosts();
 }
 
-function savePost(id){
+// 글 저장
+function savePost(id) {
   const post = posts.find(p=>p.id==id);
   post.content = document.getElementById(`editContent_${id}`).value;
   savePosts();
@@ -64,15 +86,20 @@ function savePost(id){
   renderPosts();
 }
 
-function deletePost(id){
+// 글 삭제
+function deletePost(id) {
   if(!confirm("삭제하시겠습니까?")) return;
   posts = posts.filter(p=>p.id!=id);
   savePosts();
   renderPosts();
 }
 
-function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
+// 로컬스토리지에 저장
+function savePosts() {
+  localStorage.setItem("posts", JSON.stringify(posts));
+}
 
+// 초기 렌더링
 renderPosts();
 </script>
 </body>
