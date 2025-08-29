@@ -8,25 +8,37 @@
     .post { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
     textarea { width: 100%; height: 80px; }
     button { margin: 5px; }
+    #pagination button { margin: 2px; }
+    #searchBox { margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <h1>관리자 페이지</h1>
+
+  <!-- 로그인 폼 -->
   <div id="login">
     <input type="password" id="adminPw" placeholder="관리자 비밀번호">
     <button onclick="checkAdmin()">로그인</button>
   </div>
+
+  <!-- 관리자 패널 -->
   <div id="adminPanel" style="display:none;">
-    <button onclick="exportExcel()">엑셀로 내보내기</button>
+    <div id="searchBox">
+      <input type="text" id="searchInput" placeholder="제목으로 검색" oninput="searchPosts()">
+      <button onclick="clearSearch()">검색 초기화</button>
+      <button onclick="exportExcel()">엑셀로 내보내기</button>
+    </div>
     <div id="posts"></div>
     <div id="pagination"></div>
   </div>
 
   <script>
     let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+    let filteredPosts = [...posts]; // 검색된 글 목록
     let currentPage = 1;
     const perPage = 10;
 
+    // 관리자 로그인
     function checkAdmin() {
       const pw = document.getElementById("adminPw").value;
       if (pw === "dobong09!") {
@@ -38,57 +50,88 @@
       }
     }
 
+    // 게시글 렌더링
     function renderPosts() {
       const start = (currentPage - 1) * perPage;
       const end = start + perPage;
-      const pagePosts = posts.slice(start, end);
+      const pagePosts = filteredPosts.slice(start, end);
 
       document.getElementById("posts").innerHTML = pagePosts.map((p, i) => `
         <div class="post">
+          <p><b>제목:</b> ${p.title || '(제목 없음)'}</p>
           <p><b>내용:</b> ${p.content}</p>
           <p><b>조회수:</b> ${p.views}</p>
-          <div><b>댓글:</b> ${p.comments.join(", ")}</div>
+          <div><b>댓글:</b> ${p.comments.join(", ") || "없음"}</div>
           <textarea id="reply${start+i}" placeholder="답글 작성"></textarea>
           <button onclick="addReply(${start+i})">답글달기</button>
-          <button onclick="deletePost(${start+i})">삭제</button>
+          <button onclick="deletePost(${start+i})">강제삭제</button>
         </div>
       `).join("");
 
-      const totalPages = Math.ceil(posts.length / perPage);
+      const totalPages = Math.ceil(filteredPosts.length / perPage);
       document.getElementById("pagination").innerHTML =
         Array.from({length: totalPages}, (_, i) => `
           <button onclick="goPage(${i+1})">${i+1}</button>
         `).join("");
     }
 
+    // 페이지 이동
     function goPage(p) {
       currentPage = p;
       renderPosts();
     }
 
+    // 댓글 추가
     function addReply(i) {
-      const reply = document.getElementById("reply"+i).value;
-      if (!reply) return;
-      posts[i].comments.push(reply);
+      const reply = document.getElementById("reply" + i).value;
+      if (!reply.trim()) return;
+
+      const globalIndex = posts.indexOf(filteredPosts[i]); // 원래 배열에서의 인덱스
+      posts[globalIndex].comments.push(reply);
       savePosts();
-      renderPosts();
+      searchPosts(); // 필터 반영 상태 유지
     }
 
+    // 게시글 삭제
     function deletePost(i) {
       if (!confirm("정말 삭제하시겠습니까?")) return;
-      posts.splice(i, 1);
+      const globalIndex = posts.indexOf(filteredPosts[i]);
+      posts.splice(globalIndex, 1);
       savePosts();
+      searchPosts(); // 다시 필터링 및 렌더링
+    }
+
+    // 게시글 저장
+    function savePosts() {
+      localStorage.setItem("posts", JSON.stringify(posts));
+      filteredPosts = [...posts];
+    }
+
+    // 제목으로 검색
+    function searchPosts() {
+      const keyword = document.getElementById("searchInput").value.trim();
+      if (keyword === "") {
+        filteredPosts = [...posts];
+      } else {
+        filteredPosts = posts.filter(p => (p.title || "").includes(keyword));
+      }
+      currentPage = 1;
       renderPosts();
     }
 
-    function savePosts() {
-      localStorage.setItem("posts", JSON.stringify(posts));
+    // 검색 초기화
+    function clearSearch() {
+      document.getElementById("searchInput").value = "";
+      filteredPosts = [...posts];
+      currentPage = 1;
+      renderPosts();
     }
 
+    // 엑셀로 내보내기
     function exportExcel() {
-      let csv = "내용,조회수,댓글\n";
+      let csv = "제목,내용,조회수,댓글\n";
       posts.forEach(p => {
-        csv += `"${p.content}",${p.views},"${p.comments.join("; ")}"\n`;
+        csv += `"${p.title || ''}","${p.content}",${p.views},"${p.comments.join("; ")}"\n`;
       });
       const blob = new Blob([csv], {type:"text/csv"});
       const url = URL.createObjectURL(blob);
