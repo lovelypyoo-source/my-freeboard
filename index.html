@@ -55,22 +55,10 @@
       border-left: 2px solid #ccc;
     }
     .admin-link {
-      text-align: right;
-      margin: 20px;
-    }
-    .admin-link button {
-      font-size: 12px;
-      padding: 5px 10px;
-      background: #ddd;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .admin-link button:hover {
-      background: #bbb;
+      margin-top: 20px;
     }
     footer {
-      margin-top: 20px;
+      margin-top: 40px;
     }
     footer img {
       max-width: 400px;
@@ -93,8 +81,8 @@
   <div id="forms"></div>
   <div id="posts"></div>
 
-  <!-- 관리자 페이지 버튼 (footer 위쪽) -->
-  <div class="admin-link">
+  <!-- 관리자 페이지 버튼 (PC에서만 보임) -->
+  <div class="admin-link" id="adminLink" style="display:none;">
     <button onclick="goAdmin()">관리자 페이지</button>
   </div>
 
@@ -184,7 +172,19 @@
       alert("조회 확인!");
     }
 
-    // 관리자 페이지 이동
+    // PC에서만 관리자 버튼 보이도록 설정
+    function checkDevice() {
+      const ua = navigator.userAgent.toLowerCase();
+      const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
+      if (!isMobile) {
+        document.getElementById("adminLink").style.display = "block";
+      } else {
+        document.getElementById("adminLink").style.display = "none";
+      }
+    }
+
+    window.onload = checkDevice;
+
     function goAdmin() {
       window.location.href = "admin.html";
     }
