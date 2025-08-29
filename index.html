@@ -54,8 +54,23 @@
       padding-left: 15px;
       border-left: 2px solid #ccc;
     }
+    .admin-link {
+      text-align: right;
+      margin: 20px;
+    }
+    .admin-link button {
+      font-size: 12px;
+      padding: 5px 10px;
+      background: #ddd;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .admin-link button:hover {
+      background: #bbb;
+    }
     footer {
-      margin-top: 40px;
+      margin-top: 20px;
     }
     footer img {
       max-width: 400px;
@@ -77,6 +92,11 @@
 
   <div id="forms"></div>
   <div id="posts"></div>
+
+  <!-- 관리자 페이지 버튼 (footer 위쪽) -->
+  <div class="admin-link">
+    <button onclick="goAdmin()">관리자 페이지</button>
+  </div>
 
   <footer>
     <img src="그림2.png" alt="그림2">
@@ -162,6 +182,11 @@
 
     function confirmPost(pw) {
       alert("조회 확인!");
+    }
+
+    // 관리자 페이지 이동
+    function goAdmin() {
+      window.location.href = "admin.html";
     }
   </script>
 </body>
