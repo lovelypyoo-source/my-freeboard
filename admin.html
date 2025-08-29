@@ -21,7 +21,7 @@ button{padding:10px 15px;font-size:16px;cursor:pointer;margin-top:5px;}
 <script>
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-// 렌더링
+// 렌더링 (모든 글 게시판 형태)
 function renderPosts(){
   const postsDiv = document.getElementById("posts");
   postsDiv.innerHTML = "";
