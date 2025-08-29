@@ -7,44 +7,25 @@
 body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
 h1 { text-align:center; margin-bottom:30px; }
 
-/* 기본 테이블 스타일 */
-table { width:100%; border-collapse: collapse; }
-th, td { border:1px solid #ccc; padding:10px; text-align:left; vertical-align:top; }
-th { background:#f0f0f0; font-size:16px; }
-td textarea { width:100%; height:120px; font-size:16px; }
-td input[type=text] { width:80%; padding:5px; font-size:14px; }
-td button { padding:6px 12px; font-size:14px; margin:2px; cursor:pointer; }
-.comments { margin-top:5px; padding-left:10px; border-left:2px solid #ccc; }
-.comments p { margin:2px 0; }
-
-/* 모바일 최적화 */
-@media (max-width:768px) {
-  table, thead, tbody, th, td, tr {
-    display:block;
-    width:100%;
-  }
-  thead tr { display:none; } /* 헤더 숨김 */
-  td { border:none; border-bottom:1px solid #ccc; padding:10px 0; }
-  td textarea { height:150px; font-size:16px; }
-  td input[type=text] { width:100%; font-size:16px; padding:10px; }
-  td button { width:48%; font-size:16px; padding:12px; margin:5px 1%; }
-  .comments { border-left:none; margin-top:10px; padding-left:0; }
-}
-
-/* 카드 형태 */
 .post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
 .post-card h2 { font-size:18px; margin-bottom:10px; }
-.post-card textarea { width:100%; margin-bottom:10px; }
-.post-card .comments input { margin-top:5px; margin-bottom:5px; }
+.post-card textarea { width:100%; margin-bottom:10px; display:none; font-size:16px; }
+.post-card .comments { display:none; margin-bottom:10px; }
+.post-card .comments input { width:100%; padding:8px; font-size:14px; margin-top:5px; margin-bottom:5px; }
+.post-card button { padding:6px 12px; font-size:14px; margin:2px; cursor:pointer; }
+
+@media (max-width:768px) {
+  .post-card textarea { font-size:16px; }
+  .post-card .comments input { font-size:16px; }
+  .post-card button { font-size:16px; padding:10px 15px; }
+}
 </style>
 </head>
 <body>
 <h1>관리자 페이지 - 전체 게시판</h1>
-
 <div id="postsContainer"></div>
 
 <script>
-// 로컬스토리지에서 글 가져오기
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
 // 게시판 렌더링
@@ -57,6 +38,8 @@ function renderPosts() {
     div.className = "post-card";
     div.innerHTML = `
       <h2>글 번호 ${index+1}</h2>
+      <input type="password" id="pwInput_${p.id}" placeholder="글 비밀번호 입력">
+      <button onclick="checkPassword('${p.id}')">확인</button>
       <textarea id="editContent_${p.id}">${p.content}</textarea>
       <p>조회수: ${p.views}</p>
       <div class="comments">
@@ -70,6 +53,21 @@ function renderPosts() {
     `;
     container.appendChild(div);
   });
+}
+
+// 비밀번호 확인
+function checkPassword(id){
+  const input = document.getElementById(`pwInput_${id}`).value;
+  const post = posts.find(p=>p.id==id);
+  if(input === post.pw){
+    document.getElementById(`editContent_${id}`).style.display = "block";
+    document.querySelector(`#editContent_${id}`).nextElementSibling.style.display = "block"; // 조회수
+    const commentsDiv = document.querySelector(`#editContent_${id}`).parentElement.querySelector(".comments");
+    commentsDiv.style.display = "block";
+    alert("비밀번호 확인 완료. 글 내용을 볼 수 있습니다.");
+  } else {
+    alert("비밀번호가 틀렸습니다.");
+  }
 }
 
 // 댓글 등록
