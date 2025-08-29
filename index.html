@@ -15,48 +15,48 @@ body {
 }
 header {
   display:flex; align-items:center; justify-content:center;
-  background:#f5f5f5; padding:30px; flex-wrap:wrap;
+  background:#f5f5f5; padding:60px; flex-wrap:wrap;
 }
-header h1 { margin:0; font-size:48px; }
-header img { margin-left:20px; height:80px; }
+header h1 { margin:0; font-size:96px; }
+header img { margin-left:40px; height:160px; }
 .main-box {
-  margin:40px auto;
-  display:flex; flex-direction:column; align-items:center; gap:30px;
-  padding:0 50px; max-width:1200px;
+  margin:80px auto;
+  display:flex; flex-direction:column; align-items:center; gap:60px;
+  padding:0 100px; max-width:2400px;
 }
 .speech-bubble {
   position:relative; background:#fff; border:2px solid #ddd;
-  border-radius:30px; padding:60px; font-size:36px; font-weight:bold;
-  max-width:95%; box-shadow:2px 2px 16px rgba(0,0,0,0.1);
+  border-radius:60px; padding:120px; font-size:72px; font-weight:bold;
+  max-width:95%; box-shadow:4px 4px 32px rgba(0,0,0,0.1);
 }
 .speech-bubble::after {
-  content:""; position:absolute; bottom:-40px; left:80px;
-  border-width:40px 40px 0; border-style:solid; border-color:#fff transparent transparent transparent;
-  filter:drop-shadow(2px 4px 4px rgba(0,0,0,0.1));
+  content:""; position:absolute; bottom:-80px; left:160px;
+  border-width:80px 80px 0; border-style:solid; border-color:#fff transparent transparent transparent;
+  filter:drop-shadow(4px 8px 8px rgba(0,0,0,0.1));
 }
 .buttons {
-  display:flex; justify-content:center; gap:30px; flex-wrap:wrap; z-index:1;
+  display:flex; justify-content:center; gap:60px; flex-wrap:wrap; z-index:1;
 }
 button {
-  font-size:28px; padding:20px 40px; border:none; border-radius:16px;
-  background:#4CAF50; color:white; cursor:pointer; min-width:180px;
+  font-size:56px; padding:40px 80px; border:none; border-radius:32px;
+  background:#4CAF50; color:white; cursor:pointer; min-width:360px;
 }
 button:hover { background:#45a049; }
 .main-image {
-  max-width:40%; width:auto; height:auto; margin-top:20px;
+  max-width:40%; width:auto; height:auto; margin-top:40px;
 }
-.post { border:1px solid #ccc; padding:30px; margin:30px auto;
-  width:95%; max-width:800px; text-align:left; border-radius:24px; background:#fafafa;
-  font-size:24px; line-height:1.8;
+.post { border:1px solid #ccc; padding:60px; margin:60px auto;
+  width:95%; max-width:1600px; text-align:left; border-radius:48px; background:#fafafa;
+  font-size:48px; line-height:3.6;
 }
-.post button { font-size:20px; padding:12px 24px; margin-right:12px; margin-top:12px; }
-.comments { margin-top:20px; padding-left:20px; border-left:4px solid #ccc; font-size:20px; }
-.comments p { margin:8px 0; }
-.comment-form { margin-top:20px; display:flex; flex-direction:column; gap:12px; }
-.comment-form input { padding:16px; font-size:20px; width:100%; box-sizing:border-box; border-radius:8px; border:1px solid #ccc; }
-.comment-form button { font-size:20px; padding:12px 24px; background-color:#2196F3; }
-.admin-link { margin-top:30px; }
-footer { margin-top:60px; }
+.post button { font-size:40px; padding:24px 48px; margin-right:24px; margin-top:24px; }
+.comments { margin-top:40px; padding-left:40px; border-left:8px solid #ccc; font-size:40px; }
+.comments p { margin:16px 0; }
+.comment-form { margin-top:40px; display:flex; flex-direction:column; gap:24px; }
+.comment-form input { padding:32px; font-size:40px; width:100%; box-sizing:border-box; border-radius:16px; border:2px solid #ccc; }
+.comment-form button { font-size:40px; padding:24px 48px; background-color:#2196F3; }
+.admin-link { margin-top:60px; }
+footer { margin-top:120px; }
 
 /* 모바일 최적화 */
 @media (max-width:768px) {
@@ -75,11 +75,11 @@ footer { margin-top:60px; }
   #forms button { font-size:18px; padding:12px 25px; }
 }
 
-/* PC에서 textarea 크게 */
+/* PC textarea 10줄 이상 보이도록 확대 */
 @media (min-width:769px) {
-  #forms textarea { width:100%; height:300px; font-size:20px; padding:15px; }
-  #forms input[type="password"] { font-size:20px; padding:12px; width:100%; }
-  #forms button { font-size:20px; padding:15px 30px; }
+  #forms textarea { width:100%; height:500px; font-size:40px; padding:20px; }
+  #forms input[type="password"] { font-size:40px; padding:20px; width:100%; }
+  #forms button { font-size:40px; padding:30px 60px; }
 }
 </style>
 </head>
@@ -106,7 +106,7 @@ footer { margin-top:60px; }
 </div>
 
 <footer>
-  <p style="color:#888; font-size:18px;">Powered by 나의 게시판</p>
+  <p style="color:#888; font-size:36px;">Powered by 나의 게시판</p>
 </footer>
 
 <script>
