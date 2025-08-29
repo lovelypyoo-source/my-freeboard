@@ -4,8 +4,15 @@
   <meta charset="UTF-8">
   <title>나의 게시판</title>
   <style>
+    @font-face {
+      font-family: 'KOROAD';
+      src: url('KOROAD.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'KOROAD', Arial, sans-serif;
       margin: 0;
       padding: 0;
       text-align: center;
@@ -22,20 +29,19 @@
     }
     header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 32px;
     }
     header img {
       margin-left: 10px;
       height: 50px;
     }
 
-    /* 메인박스 */
     .main-box {
       margin: 20px auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 15px;
+      gap: 20px;
       padding: 0 10px;
     }
 
@@ -44,10 +50,10 @@
       background: #fff;
       border: 2px solid #ddd;
       border-radius: 15px;
-      padding: 25px;
-      font-size: 22px;
+      padding: 35px 25px 25px 25px;
+      font-size: 24px;
       font-weight: bold;
-      max-width: 300px;
+      max-width: 95%;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
     }
     .speech-bubble::after {
@@ -61,7 +67,6 @@
       filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.1));
     }
 
-    /* 버튼 */
     .buttons {
       display: flex;
       justify-content: center;
@@ -69,28 +74,27 @@
       flex-wrap: wrap;
     }
     button {
-      font-size: 16px;
-      padding: 12px 25px;
+      font-size: 18px;
+      padding: 15px 30px;
       border: none;
       border-radius: 8px;
       background: #4CAF50;
       color: white;
       cursor: pointer;
-      min-width: 100px;
+      min-width: 120px;
     }
     button:hover {
       background: #45a049;
     }
 
-    /* 메인 이미지 */
     .main-image {
-      max-width: 200px;
-      width: 80%;
+      max-width: 100%;
+      width: 90%;
       height: auto;
       margin-top: 10px;
+      border-radius: 12px;
     }
 
-    /* 게시글 */
     .post {
       border: 1px solid #ccc;
       padding: 20px;
@@ -100,12 +104,12 @@
       text-align: left;
       border-radius: 12px;
       background: #fafafa;
-      font-size: 18px;
-      line-height: 1.6;
+      font-size: 20px;
+      line-height: 1.8;
     }
     .post button {
-      font-size: 14px;
-      padding: 8px 16px;
+      font-size: 16px;
+      padding: 10px 20px;
       margin-right: 8px;
       margin-top: 10px;
     }
@@ -114,7 +118,7 @@
       margin-top: 15px;
       padding-left: 20px;
       border-left: 3px solid #ccc;
-      font-size: 16px;
+      font-size: 18px;
     }
     .comments p {
       margin: 5px 0;
@@ -127,16 +131,16 @@
       gap: 8px;
     }
     .comment-form input {
-      padding: 8px;
-      font-size: 16px;
+      padding: 12px;
+      font-size: 18px;
       width: 100%;
       box-sizing: border-box;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
     .comment-form button {
-      font-size: 14px;
-      padding: 8px 16px;
+      font-size: 16px;
+      padding: 10px 20px;
       background-color: #2196F3;
     }
 
@@ -156,44 +160,65 @@
     /* 모바일 최적화 */
     @media (max-width: 600px) {
       header h1 {
-        font-size: 24px;
+        font-size: 28px;
       }
       header img {
         height: 40px;
       }
+
       .speech-bubble {
-        font-size: 20px;
-        padding: 20px;
-        max-width: 90%;
+        font-size: 22px;
+        padding: 30px 20px 20px 20px;
       }
+
       .buttons button {
-        font-size: 14px;
-        padding: 10px 20px;
-        width: 45%;
-      }
-      .main-image {
-        max-width: 90%;
-      }
-      .post {
         font-size: 16px;
-        padding: 15px;
+        padding: 14px 25px;
+        width: 48%;
+      }
+
+      .main-image {
+        max-width: 95%;
         width: 95%;
       }
-      .post button {
-        font-size: 14px;
-        padding: 8px 16px;
+
+      .post {
+        font-size: 18px;
+        padding: 18px;
       }
+      .post button {
+        font-size: 16px;
+        padding: 10px 18px;
+      }
+
       .comments {
-        font-size: 15px;
+        font-size: 16px;
         padding-left: 15px;
       }
       .comment-form input {
-        font-size: 14px;
-        padding: 6px;
+        font-size: 16px;
+        padding: 10px;
       }
       .comment-form button {
-        font-size: 14px;
-        padding: 8px 16px;
+        font-size: 16px;
+        padding: 10px 18px;
+      }
+
+      /* 글쓰기 폼 크게 */
+      #forms textarea {
+        width: 100%;
+        height: 200px;
+        font-size: 20px;
+        padding: 14px;
+      }
+      #forms input[type="password"] {
+        font-size: 18px;
+        padding: 12px;
+        width: 100%;
+      }
+      #forms button {
+        font-size: 18px;
+        padding: 14px 25px;
       }
     }
   </style>
@@ -204,25 +229,20 @@
     <img src="그림1.png" alt="그림1">
   </header>
 
-  <!-- 메인 콘텐츠 -->
   <div class="main-box">
     <div class="speech-bubble">어떤 건의사항이 있으신가요?</div>
 
-    <!-- 버튼 영역 -->
     <div class="buttons">
       <button onclick="showWriteForm()">글쓰기</button>
       <button onclick="showViewForm()">조회</button>
     </div>
 
-    <!-- 메인 이미지 -->
     <img src="그림2.png" alt="그림2" class="main-image">
   </div>
 
-  <!-- 글쓰기/조회 폼 & 게시글 영역 -->
   <div id="forms"></div>
   <div id="posts"></div>
 
-  <!-- 관리자 버튼 (PC에서만 보임) -->
   <div class="admin-link" id="adminLink" style="display:none;">
     <button onclick="goAdmin()">관리자 페이지</button>
   </div>
@@ -234,9 +254,7 @@
   <script>
     let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-    function savePosts() {
-      localStorage.setItem("posts", JSON.stringify(posts));
-    }
+    function savePosts() { localStorage.setItem("posts", JSON.stringify(posts)); }
 
     function showWriteForm() {
       document.getElementById("forms").innerHTML = `
@@ -250,10 +268,7 @@
     function addPost() {
       const content = document.getElementById("content").value;
       const pw = document.getElementById("pw").value;
-      if (!content || pw.length !== 4) {
-        alert("내용과 4자리 비밀번호를 입력하세요.");
-        return;
-      }
+      if (!content || pw.length !== 4) { alert("내용과 4자리 비밀번호를 입력하세요."); return; }
       posts.push({ content, pw, views: 0, comments: [] });
       savePosts();
       alert("글이 등록되었습니다.");
@@ -271,10 +286,7 @@
     function viewPost() {
       const pw = document.getElementById("checkPw").value;
       const post = posts.find(p => p.pw === pw);
-      if (!post) {
-        alert("비밀번호가 일치하는 글이 없습니다.");
-        return;
-      }
+      if (!post) { alert("비밀번호가 일치하는 글이 없습니다."); return; }
       post.views++;
       savePosts();
       displayPost(post);
@@ -287,12 +299,10 @@
           <p>조회수: ${post.views}</p>
           <button onclick="editPost('${post.pw}')">수정</button>
           <button onclick="confirmPost('${post.pw}')">확인</button>
-          
           <div class="comments">
             <h4>댓글</h4>
             ${post.comments.map(c => `<p>- ${c}</p>`).join("")}
           </div>
-
           <div class="comment-form">
             <input type="text" id="commentInput_${post.pw}" placeholder="댓글을 입력하세요">
             <button onclick="addComment('${post.pw}')">댓글 등록</button>
@@ -302,49 +312,3 @@
     }
 
     function editPost(pw) {
-      const post = posts.find(p => p.pw === pw);
-      if (!post) return;
-      document.getElementById("posts").innerHTML = `
-        <textarea id="editContent">${post.content}</textarea><br>
-        <button onclick="saveEdit('${pw}')">저장</button>
-      `;
-    }
-
-    function saveEdit(pw) {
-      const post = posts.find(p => p.pw === pw);
-      if (!post) return;
-      post.content = document.getElementById("editContent").value;
-      savePosts();
-      alert("수정되었습니다.");
-      displayPost(post);
-    }
-
-    function confirmPost(pw) {
-      alert("조회 확인!");
-    }
-
-    function addComment(pw) {
-      const input = document.getElementById(`commentInput_${pw}`);
-      const post = posts.find(p => p.pw === pw);
-      if (!post || !input.value.trim()) return;
-      post.comments.push(input.value.trim());
-      savePosts();
-      input.value = "";
-      displayPost(post);
-    }
-
-    // PC에서만 관리자 버튼 보이도록
-    function checkDevice() {
-      const ua = navigator.userAgent.toLowerCase();
-      const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
-      document.getElementById("adminLink").style.display = isMobile ? "none" : "block";
-    }
-
-    window.onload = checkDevice;
-
-    function goAdmin() {
-      window.location.href = "admin.html";
-    }
-  </script>
-</body>
-</html>
