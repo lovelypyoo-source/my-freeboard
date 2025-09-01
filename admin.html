@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
+<script src="config.js"></script>
+<script>
+  // 세션 인증 확인
+  window.onload = function() {
+    if (sessionStorage.getItem("adminAuth") !== "true") {
+      alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
+      window.location.href = "index.html";
+    }
+  }
+</script>
 <style>
 body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
 h1 { text-align:center; margin-bottom:30px; }
@@ -14,6 +24,19 @@ h1 { text-align:center; margin-bottom:30px; }
 .post-card .comments input { width:100%; padding:8px; font-size:14px; margin-top:5px; margin-bottom:5px; }
 .post-card button { padding:6px 12px; font-size:14px; margin:2px; cursor:pointer; }
 
+.logout {
+  display:block;
+  margin:30px auto 0;
+  padding:10px 20px;
+  background:#ff5c5c;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:16px;
+}
+.logout:hover { background:#e04848; }
+
 @media (max-width:768px) {
   .post-card textarea { font-size:16px; }
   .post-card .comments input { font-size:16px; }
@@ -24,6 +47,7 @@ h1 { text-align:center; margin-bottom:30px; }
 <body>
 <h1>관리자 페이지 - 전체 게시판</h1>
 <div id="postsContainer"></div>
+<button class="logout" onclick="logout()">로그아웃</button>
 
 <script>
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
@@ -100,6 +124,13 @@ function deletePost(id){
 
 // 로컬스토리지 저장
 function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
+
+// 로그아웃
+function logout() {
+  sessionStorage.removeItem("adminAuth");
+  alert("로그아웃 되었습니다.");
+  window.location.href = "index.html";
+}
 
 // 초기 렌더링
 renderPosts();
