@@ -8,47 +8,18 @@
   font-family: 'KOROAD';
   src: url('KOROAD.ttf') format('truetype');
 }
-body {
-  font-family: 'KOROAD', Arial, sans-serif;
-  margin:0; padding:0;
-  text-align:center; background:#f9f9f9;
-}
-header {
-  display:flex; align-items:center; justify-content:center;
-  background:#f5f5f5; padding:60px; flex-wrap:wrap;
-}
+body { font-family: 'KOROAD', Arial, sans-serif; margin:0; padding:0; text-align:center; background:#f9f9f9; }
+header { display:flex; align-items:center; justify-content:center; background:#f5f5f5; padding:60px; flex-wrap:wrap; }
 header h1 { margin:0; font-size:96px; }
 header img { margin-left:40px; height:160px; }
-.main-box {
-  margin:80px auto;
-  display:flex; flex-direction:column; align-items:center; gap:60px;
-  padding:0 100px; max-width:2400px;
-}
-.speech-bubble {
-  position:relative; background:#fff; border:2px solid #ddd;
-  border-radius:60px; padding:120px; font-size:72px; font-weight:bold;
-  max-width:95%; box-shadow:4px 4px 32px rgba(0,0,0,0.1);
-}
-.speech-bubble::after {
-  content:""; position:absolute; bottom:-80px; left:160px;
-  border-width:80px 80px 0; border-style:solid; border-color:#fff transparent transparent transparent;
-  filter:drop-shadow(4px 8px 8px rgba(0,0,0,0.1));
-}
-.buttons {
-  display:flex; justify-content:center; gap:60px; flex-wrap:wrap; z-index:1;
-}
-button {
-  font-size:56px; padding:40px 80px; border:none; border-radius:32px;
-  background:#4CAF50; color:white; cursor:pointer; min-width:360px;
-}
+.main-box { margin:80px auto; display:flex; flex-direction:column; align-items:center; gap:60px; padding:0 100px; max-width:2400px; }
+.speech-bubble { position:relative; background:#fff; border:2px solid #ddd; border-radius:60px; padding:120px; font-size:72px; font-weight:bold; max-width:95%; box-shadow:4px 4px 32px rgba(0,0,0,0.1); }
+.speech-bubble::after { content:""; position:absolute; bottom:-80px; left:160px; border-width:80px 80px 0; border-style:solid; border-color:#fff transparent transparent transparent; filter:drop-shadow(4px 8px 8px rgba(0,0,0,0.1)); }
+.buttons { display:flex; justify-content:center; gap:60px; flex-wrap:wrap; z-index:1; }
+button { font-size:56px; padding:40px 80px; border:none; border-radius:32px; background:#4CAF50; color:white; cursor:pointer; min-width:360px; }
 button:hover { background:#45a049; }
-.main-image {
-  max-width:40%; width:auto; height:auto; margin-top:40px;
-}
-.post { border:1px solid #ccc; padding:60px; margin:60px auto;
-  width:95%; max-width:1600px; text-align:left; border-radius:48px; background:#fafafa;
-  font-size:48px; line-height:3.6;
-}
+.main-image { max-width:40%; width:auto; height:auto; margin-top:40px; }
+.post { border:1px solid #ccc; padding:60px; margin:60px auto; width:95%; max-width:1600px; text-align:left; border-radius:48px; background:#fafafa; font-size:48px; line-height:3.6; }
 .post button { font-size:40px; padding:24px 48px; margin-right:24px; margin-top:24px; }
 .comments { margin-top:40px; padding-left:40px; border-left:8px solid #ccc; font-size:40px; }
 .comments p { margin:16px 0; }
@@ -102,7 +73,7 @@ footer { margin-top:120px; }
 <div id="posts"></div>
 
 <div class="admin-link" id="adminLink" style="display:none;">
-  <button onclick="goAdmin()">관리자 페이지</button>
+  <button onclick="showAdminLogin()">관리자 페이지</button>
 </div>
 
 <footer>
@@ -112,8 +83,7 @@ footer { margin-top:120px; }
 <script>
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
-
+// 글쓰기
 function showWriteForm(){
   document.getElementById("forms").innerHTML=`
     <h3>글쓰기</h3>
@@ -124,89 +94,77 @@ function showWriteForm(){
 }
 
 function addPost(){
-  const content=document.getElementById("content").value;
-  const pw=document.getElementById("pw").value;
+  const content = document.getElementById("content").value;
+  const pw = document.getElementById("pw").value;
   if(!content||pw.length!==4){ alert("내용과 4자리 비밀번호를 입력하세요."); return; }
-  const id=Date.now()+Math.random();
-  posts.push({id,content,pw,views:0,comments:[]});
+  posts.push({ id: Date.now(), content, pw, views:0, comments:[] });
   savePosts();
   alert("글이 등록되었습니다.");
   document.getElementById("forms").innerHTML="";
 }
 
+// 글 조회
 function showViewForm(){
-  document.getElementById("forms").innerHTML=`
-    <h3>글 조회</h3>
-    <input type="password" id="checkPw" placeholder="작성 시 입력한 비밀번호 4자리" maxlength="4">
-    <button onclick="viewPost()">조회하기</button>
-  `;
+  renderAllPosts(); // 전체 글을 보여주기
 }
 
-function viewPost(){
-  const pw=document.getElementById("checkPw").value;
-  const post=posts.find(p=>p.pw===pw);
-  if(!post){ alert("비밀번호가 일치하는 글이 없습니다."); return; }
-  post.views++;
-  savePosts();
-  displayPost(post);
-}
-
-function displayPost(post){
-  document.getElementById("posts").innerHTML=`
-    <div class="post">
+// 글 전체 표시 (일반 사용자용)
+function renderAllPosts(){
+  const postsDiv = document.getElementById("posts");
+  postsDiv.innerHTML="";
+  posts.forEach(post=>{
+    const div = document.createElement("div");
+    div.className="post";
+    div.innerHTML=`
       <p>${post.content}</p>
-      <p>조회수: ${post.views}</p>
-      <button onclick="editPost('${post.id}')">수정</button>
-      <button onclick="confirmPost('${post.id}')">확인</button>
+      <p>조회수: ${post.views+1}</p>
       <div class="comments">
         <h4>댓글</h4>
         ${post.comments.map(c=>`<p>- ${c}</p>`).join("")}
       </div>
+      ${isAdminPC() ? `
       <div class="comment-form">
-        <input type="text" id="commentInput_${post.id}" placeholder="댓글을 입력하세요">
+        <input type="text" id="commentInput_${post.id}" placeholder="댓글 작성">
         <button onclick="addComment('${post.id}')">댓글 등록</button>
-      </div>
-    </div>
-  `;
+      </div>` : ''}
+    `;
+    postsDiv.appendChild(div);
+  });
 }
 
-function editPost(id){
-  const post=posts.find(p=>p.id==id);
-  if(!post) return;
-  document.getElementById("posts").innerHTML=`
-    <textarea id="editContent">${post.content}</textarea><br>
-    <button onclick="saveEdit('${id}')">저장</button>
-  `;
-}
-
-function saveEdit(id){
-  const post=posts.find(p=>p.id==id);
-  post.content=document.getElementById("editContent").value;
-  savePosts();
-  alert("수정되었습니다.");
-  displayPost(post);
-}
-
-function confirmPost(id){ alert("조회 확인!"); }
-
+// 댓글 입력 (관리자만)
 function addComment(id){
-  const input=document.getElementById(`commentInput_${id}`);
-  const post=posts.find(p=>p.id==id);
-  if(!post||!input.value.trim()) return;
+  const input = document.getElementById(`commentInput_${id}`);
+  const post = posts.find(p=>p.id==id);
+  if(!post || !input.value.trim()) return;
   post.comments.push(input.value.trim());
   savePosts();
   input.value="";
-  displayPost(post);
+  renderAllPosts();
 }
 
+// 저장
+function savePosts(){ localStorage.setItem("posts", JSON.stringify(posts)); }
+
+// 관리자 버튼 PC에서만
 function checkDevice(){
-  const ua=navigator.userAgent.toLowerCase();
-  const isMobile=/android|iphone|ipad|ipod|mobile/i.test(ua);
-  document.getElementById("adminLink").style.display=isMobile?"none":"block";
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
+  document.getElementById("adminLink").style.display = isMobile ? "none" : "block";
 }
-window.onload=checkDevice;
 
-function goAdmin(){ window.location.href="admin.html"; }
+function isAdminPC(){ 
+  return !/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent.toLowerCase());
+}
+
+window.onload = checkDevice;
+
+// 관리자 로그인
+function showAdminLogin(){
+  const pw = prompt("관리자 비밀번호를 입력하세요:");
+  if(pw === "dobong09!"){ window.location.href="admin.html"; }
+  else { alert("비밀번호가 틀렸습니다."); }
+}
 </script>
 </body>
 </html>
