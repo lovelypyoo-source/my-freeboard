@@ -2,31 +2,73 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>나의 게시판</title>
+<title>게시판 메인</title>
 <style>
-@font-face {
-  font-family: 'KOROAD';
-  src: url('KOROAD.ttf') format('truetype');
-}
-body { font-family: 'KOROAD', Arial, sans-serif; margin:0; padding:0; text-align:center; background:#f9f9f9; }
-header { display:flex; align-items:center; justify-content:center; background:#f5f5f5; padding:60px; flex-wrap:wrap; }
-header h1 { margin:0; font-size:96px; }
-header img { margin-left:40px; height:160px; }
-.main-box { margin:80px auto; display:flex; flex-direction:column; align-items:center; gap:60px; padding:0 100px; max-width:2400px; }
-.speech-bubble { position:relative; background:#fff; border:2px solid #ddd; border-radius:60px; padding:120px; font-size:72px; font-weight:bold; max-width:95%; box-shadow:4px 4px 32px rgba(0,0,0,0.1); }
-.speech-bubble::after { content:""; position:absolute; bottom:-80px; left:160px; border-width:80px 80px 0; border-style:solid; border-color:#fff transparent transparent transparent; filter:drop-shadow(4px 8px 8px rgba(0,0,0,0.1)); }
-.buttons { display:flex; justify-content:center; gap:60px; flex-wrap:wrap; z-index:1; }
-button { font-size:56px; padding:40px 80px; border:none; border-radius:32px; background:#4CAF50; color:white; cursor:pointer; min-width:360px; }
-button:hover { background:#45a049; }
-.main-image { max-width:40%; width:auto; height:auto; margin-top:40px; }
-.post { border:1px solid #ccc; padding:60px; margin:60px auto; width:95%; max-width:1600px; text-align:left; border-radius:48px; background:#fafafa; font-size:48px; line-height:3.6; }
-.post button { font-size:40px; padding:24px 48px; margin-right:24px; margin-top:24px; }
-.comments { margin-top:40px; padding-left:40px; border-left:8px solid #ccc; font-size:40px; }
-.comments p { margin:16px 0; }
-.comment-form { margin-top:40px; display:flex; flex-direction:column; gap:24px; }
-.comment-form input { padding:32px; font-size:40px; width:100%; box-sizing:border-box; border-radius:16px; border:2px solid #ccc; }
-.comment-form button { font-size:40px; padding:24px 48px; background-color:#2196F3; }
+body { font-family: Arial, sans-serif; background:#f9f9f9; padding:20px; }
+h1 { text-align:center; }
+.container { max-width:600px; margin:0 auto; }
+textarea, input { width:100%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
+button { padding:10px 15px; margin:5px; border:none; border-radius:5px; background:#007BFF; color:white; cursor:pointer; }
+button:hover { background:#0056b3; }
+.post { background:#fff; padding:15px; margin:20px auto; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+</style>
+</head>
+<body>
+  <h1>게시판 메인</h1>
+  <div class="container">
+    <h3>글쓰기</h3>
+    <textarea id="content" placeholder="내용을 입력하세요"></textarea>
+    <input type="password" id="pw" placeholder="비밀번호(4자리)" maxlength="4">
+    <button onclick="savePost()">저장</button>
 
+    <h3>메뉴</h3>
+    <button onclick="goView()">내 글 조회</button>
+    <button onclick="goAdmin()">관리자 페이지</button>
+  </div>
+
+<script>
+let posts = JSON.parse(localStorage.getItem("posts")||"[]");
+
+// 글 저장
+function savePost(){
+  const content=document.getElementById("content").value.trim();
+  const pw=document.getElementById("pw").value.trim();
+
+  if(content==="" || pw===""){ alert("내용과 비밀번호를 입력하세요."); return; }
+  if(pw.length!==4){ alert("비밀번호는 4자리여야 합니다."); return; }
+
+  const post={ content:content, pw:pw, views:0, comments:[] };
+  posts.push(post);
+  localStorage.setItem("posts",JSON.stringify(posts));
+  alert("글이 저장되었습니다.");
+  document.getElementById("content").value="";
+  document.getElementById("pw").value="";
+}
+
+// 내 글 조회
+function goView(){
+  const inputPw=prompt("본인 글 비밀번호(4자리)를 입력하세요:");
+  if(!inputPw) return;
+  if(inputPw.length!==4){ alert("비밀번호는 4자리입니다."); return; }
+
+  // 해당 비밀번호로 작성된 글이 있는지 확인
+  const myPosts=posts.filter(p=>p.pw===inputPw);
+  if(myPosts.length===0){ alert("해당 비밀번호로 작성된 글이 없습니다."); return; }
+
+  // 비밀번호 세션 저장
+  sessionStorage.setItem("viewPw",inputPw);
+  window.location.href="view.html";
+}
+
+// 관리자 페이지 이동
+function goAdmin(){
+  const inputPw=prompt("관리자 비밀번호를 입력하세요:");
+  if(inputPw==="dobong09!"){
+    window.location.href="admin.html";
+  }else{
+    alert("비밀번호가 틀렸습니다.");
+  }
+}
 /* 관리자 버튼 크기 절반 */
 .admin-link button { 
   font-size:28px; 
