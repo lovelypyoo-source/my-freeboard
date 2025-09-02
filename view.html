@@ -6,7 +6,7 @@
 <style>
 body { font-family: Arial, sans-serif; padding:20px; background:#f0f0f0; }
 h1 { text-align:center; }
-.post { background:#fff; padding:15px; margin:20px auto; border-radius:10px; max-width:600px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+.post { background:#fff; padding:15px; margin:20px auto; border-radius:10px; max-width:700px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
 .comments { margin-top:10px; padding-top:10px; border-top:1px solid #ddd; }
 </style>
 </head>
@@ -15,40 +15,46 @@ h1 { text-align:center; }
   <div id="posts"></div>
 
 <script>
-let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-let pw=sessionStorage.getItem("viewPw");
+function getPosts(){
+  try { return JSON.parse(localStorage.getItem("posts")||"[]"); }
+  catch(e){ return []; }
+}
+function setPosts(arr){ localStorage.setItem("posts", JSON.stringify(arr)); }
 
+const pw = sessionStorage.getItem("viewPw");
+
+// 인증 없으면 되돌리기
 if(!pw){
   alert("비밀번호 인증 후 이용하세요.");
   window.location.href="index.html";
-}
-
-const myPosts=posts.filter(p=>p.pw===pw);
-
-if(myPosts.length===0){
-  alert("해당 비밀번호로 작성된 글이 없습니다.");
-  window.location.href="index.html";
 }else{
-  const latestPost=myPosts[myPosts.length-1];
-  renderSinglePost(latestPost);
+  const posts = getPosts();
+  const myPosts = posts.filter(p=>p.pw===pw);
+  if(myPosts.length===0){
+    alert("해당 비밀번호로 작성된 글이 없습니다.");
+    window.location.href="index.html";
+  }else{
+    const latestPost = myPosts[myPosts.length-1]; // 가장 마지막 글
+    latestPost.views++;
+    setPosts(posts); // 조회수 반영 저장
+    renderSinglePost(latestPost);
+  }
 }
 
 function renderSinglePost(post){
-  const postsDiv=document.getElementById("posts");
-  postsDiv.innerHTML="";
-  post.views++;
-  const div=document.createElement("div");
-  div.className="post";
-  div.innerHTML=`
-    <p>${post.content}</p>
-    <p>조회수: ${post.views}</p>
-    <div class="comments">
-      <h4>댓글</h4>
-      ${post.comments.map(c=>`<p>- ${c}</p>`).join("") || "<p>댓글 없음</p>"}
+  const postsDiv = document.getElementById("posts");
+  postsDiv.innerHTML = `
+    <div class="post">
+      <p>${post.content}</p>
+      <p>조회수: ${post.views}</p>
+      <div class="comments">
+        <h4>댓글</h4>
+        ${(post.comments && post.comments.length)
+          ? post.comments.map(c=>`<p>- ${c}</p>`).join("")
+          : "<p>댓글 없음</p>"}
+      </div>
     </div>
   `;
-  postsDiv.appendChild(div);
-  localStorage.setItem("posts",JSON.stringify(posts));
 }
 </script>
 </body>
