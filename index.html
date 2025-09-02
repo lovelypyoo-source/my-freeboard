@@ -179,6 +179,47 @@ function checkAdminLogin(){
     alert("비밀번호가 틀렸습니다."); 
   }
 }
+
+let posts = JSON.parse(localStorage.getItem("posts")||"[]");
+
+// 글 저장
+function savePost(){
+  const content=document.getElementById("content").value.trim();
+  const pw=document.getElementById("pw").value.trim();
+
+  if(content==="" || pw===""){ alert("내용과 비밀번호를 입력하세요."); return; }
+  if(pw.length!==4){ alert("비밀번호는 4자리여야 합니다."); return; }
+
+  const post={ content:content, pw:pw, views:0, comments:[] };
+  posts.push(post);
+  localStorage.setItem("posts",JSON.stringify(posts));
+  alert("글이 저장되었습니다.");
+  document.getElementById("content").value="";
+  document.getElementById("pw").value="";
+}
+
+// 내 글 조회 (프롬프트만 → 맞으면 바로 view.html 이동)
+function goView(){
+  const inputPw = prompt("본인 글 비밀번호(4자리)를 입력하세요:");
+  if(!inputPw) return;
+  if(inputPw.length!==4){ alert("비밀번호는 4자리입니다."); return; }
+
+  const myPosts = posts.filter(p=>p.pw===inputPw);
+  if(myPosts.length===0){ alert("해당 비밀번호로 작성된 글이 없습니다."); return; }
+
+  sessionStorage.setItem("viewPw", inputPw);
+  window.location.href="view.html"; // ✅ 바로 view.html 이동
+}
+
+// 관리자 페이지 이동
+function goAdmin(){
+  const inputPw = prompt("관리자 비밀번호를 입력하세요:");
+  if(inputPw==="dobong09!"){
+    window.location.href="admin.html";
+  }else{
+    alert("비밀번호가 틀렸습니다.");
+  }
+}
 </script>
 </body>
 </html>
