@@ -2,87 +2,61 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>나의 게시판</title>
+<title>메인 페이지</title>
 <style>
-@font-face {
-  font-family: 'KOROAD';
-  src: url('KOROAD.ttf') format('truetype');
-}
-body { font-family: 'KOROAD', Arial, sans-serif; margin:0; padding:0; text-align:center; background:#f9f9f9; }
-header { display:flex; align-items:center; justify-content:center; background:#f5f5f5; padding:60px; flex-wrap:wrap; }
-header h1 { margin:0; font-size:96px; }
-header img { margin-left:40px; height:160px; }
-.main-box { margin:80px auto; display:flex; flex-direction:column; align-items:center; gap:60px; padding:0 100px; max-width:2400px; }
-.speech-bubble { position:relative; background:#fff; border:2px solid #ddd; border-radius:60px; padding:120px; font-size:72px; font-weight:bold; max-width:95%; box-shadow:4px 4px 32px rgba(0,0,0,0.1); }
-.speech-bubble::after { content:""; position:absolute; bottom:-80px; left:160px; border-width:80px 80px 0; border-style:solid; border-color:#fff transparent transparent transparent; filter:drop-shadow(4px 8px 8px rgba(0,0,0,0.1)); }
-.buttons { display:flex; justify-content:center; gap:60px; flex-wrap:wrap; z-index:1; }
-button { font-size:56px; padding:40px 80px; border:none; border-radius:32px; background:#4CAF50; color:white; cursor:pointer; min-width:360px; }
-button:hover { background:#45a049; }
-.main-image { max-width:40%; width:auto; height:auto; margin-top:40px; }
-.post { border:1px solid #ccc; padding:60px; margin:60px auto; width:95%; max-width:1600px; text-align:left; border-radius:48px; background:#fafafa; font-size:48px; line-height:3.6; }
-.post button { font-size:40px; padding:24px 48px; margin-right:24px; margin-top:24px; }
-.comments { margin-top:40px; padding-left:40px; border-left:8px solid #ccc; font-size:40px; }
-.comments p { margin:16px 0; }
-.comment-form { margin-top:40px; display:flex; flex-direction:column; gap:24px; }
-.comment-form input { padding:32px; font-size:40px; width:100%; box-sizing:border-box; border-radius:16px; border:2px solid #ccc; }
-.comment-form button { font-size:40px; padding:24px 48px; background-color:#2196F3; }
-
-/* 관리자 버튼 (하단 전용, 작게 표시) */
-.admin-btn {
-  font-size:20px;
-  padding:8px 16px;
-  border:none;
-  border-radius:8px;
-  background:#666;
-  color:#fff;
-  cursor:pointer;
-  margin:40px auto;
-  display:inline-block;
-}
-.admin-btn:hover { background:#444; }
-
-/* 모바일 최적화 */
-@media (max-width:768px) {
-  header h1 { font-size:36px; }
-  header img { height:60px; }
-  .speech-bubble { font-size:28px; padding:45px; }
-  .buttons button { font-size:24px; padding:16px 32px; width:45%; }
-  .main-image { max-width:90%; margin-top:15px; }
-  .post { font-size:20px; padding:24px; }
-  .post button { font-size:18px; padding:10px 20px; }
-  .comments { font-size:18px; padding-left:15px; }
-  .comment-form input { font-size:18px; padding:12px; }
-  .comment-form button { font-size:18px; padding:10px 20px; }
-  #forms textarea { width:100%; height:250px; font-size:18px; padding:12px; }
-  #forms input[type="password"] { font-size:18px; padding:10px; width:100%; }
-  #forms button { font-size:18px; padding:12px 25px; }
-}
-
-/* PC textarea 크게 */
-@media (min-width:769px) {
-  #forms textarea { width:100%; height:500px; font-size:40px; padding:20px; }
-  #forms input[type="password"] { font-size:40px; padding:20px; width:50%; }
-  #forms button { font-size:40px; padding:20px 40px; }
-}
+body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
+h1 { text-align:center; margin-bottom:20px; }
+button { padding:10px 15px; margin:5px; border:none; border-radius:5px; cursor:pointer; }
+#adminBtn { font-size:12px; display:block; margin:30px auto 0; color:#555; background:#eee; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>나의 게시판</h1>
-    <img src="main.png" alt="메인 이미지">
-  </header>
+  <h1>자유게시판</h1>
 
-  <div class="main-box">
-    <div class="speech-bubble">어떤 건의사항이 있으신가요?</div>
-    <div class="buttons">
-      <button onclick="location.href='write.html'">글쓰기</button>
-      <button onclick="location.href='list.html'">조회</button>
-    </div>
-  </div>
+  <textarea id="content" placeholder="내용을 입력하세요"></textarea><br>
+  <input type="password" id="pw" maxlength="4" placeholder="비밀번호(4자리)"><br>
+  <button onclick="savePost()">글쓰기</button>
+  <button onclick="checkPwAndView()">조회</button>
+  <button id="adminBtn" onclick="goAdmin()">관리자 페이지</button>
 
-  <!-- 관리자 버튼 (작게, 하단에만 표시) -->
-  <div>
-    <button class="admin-btn" onclick="location.href='admin.html'">관리자 페이지</button>
-  </div>
+<script>
+function savePost(){
+  const content=document.getElementById("content").value.trim();
+  const pw=document.getElementById("pw").value.trim();
+  if(!content||pw.length!==4){
+    alert("내용과 4자리 비밀번호를 입력하세요.");
+    return;
+  }
+  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+  posts.push({content, pw, views:0, comments:[]});
+  localStorage.setItem("posts",JSON.stringify(posts));
+  alert("저장되었습니다.");
+  document.getElementById("content").value="";
+  document.getElementById("pw").value="";
+}
+
+function checkPwAndView(){
+  const inputPw=prompt("조회할 글의 비밀번호 4자리를 입력하세요:");
+  if(!inputPw) return;
+  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+  const match=posts.some(p=>p.pw===inputPw);
+  if(match){
+    sessionStorage.setItem("viewPw",inputPw);
+    window.location.href="view.html";
+  }else{
+    alert("해당 비밀번호의 글이 없습니다.");
+  }
+}
+
+function goAdmin(){
+  const input=prompt("관리자 비밀번호를 입력하세요:");
+  if(input==="dobong09!"){
+    sessionStorage.setItem("isAdmin","true");
+    window.location.href="admin.html";
+  }else{
+    alert("비밀번호가 틀렸습니다.");
+  }
+}
+</script>
 </body>
 </html>
