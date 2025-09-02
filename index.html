@@ -91,99 +91,53 @@ footer { margin-top:120px; }
   <p style="color:#888; font-size:36px;">Powered by 나의 게시판</p>
 </footer>
 
+<!-- 글 조회 (비밀번호 입력) -->
 <script>
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
-
-// 글쓰기
-function showWriteForm(){
+function showViewForm(){
   document.getElementById("forms").innerHTML=`
-    <h3>글쓰기</h3>
-    <textarea id="content" placeholder="내용을 입력하세요"></textarea><br>
-    <input type="password" id="pw" placeholder="비밀번호(4자리)" maxlength="4"><br>
-    <button onclick="addPost()">입력완료</button>
+    <h3>글 조회</h3>
+    <input type="password" id="viewPw" placeholder="비밀번호(4자리)" maxlength="4"><br>
+    <button onclick="checkViewPw()">확인</button>
   `;
 }
 
-function addPost(){
-  const content = document.getElementById("content").value;
-  const pw = document.getElementById("pw").value;
-  if(!content||pw.length!==4){ alert("내용과 4자리 비밀번호를 입력하세요."); return; }
-  posts.push({ id: Date.now(), content, pw, views:0, comments:[] });
-  savePosts();
-  alert("글이 등록되었습니다.");
-  document.getElementById("forms").innerHTML="";
+function checkViewPw(){
+  const pw = document.getElementById("viewPw").value;
+  if(pw.length!==4){ 
+    alert("4자리 비밀번호를 입력하세요."); 
+    return; 
+  }
+
+  // 해당 비밀번호로 작성된 글들 찾기
+  const myPosts = posts.filter(p=>p.pw===pw);
+
+  if(myPosts.length===0){
+    alert("해당 비밀번호로 작성된 글이 없습니다.");
+    return;
+  }
+
+  // 최신 글 1개만 가져오기
+  const latestPost = myPosts[myPosts.length - 1];
+  renderSinglePost(latestPost);
 }
 
-// 글 조회
-function showViewForm(){
-  renderAllPosts(); 
-}
-
-// 글 전체 표시
-function renderAllPosts(){
+// 최신 글 1개만 출력 (수정/삭제 버튼 제거)
+function renderSinglePost(post){
   const postsDiv = document.getElementById("posts");
   postsDiv.innerHTML="";
-  posts.forEach(post=>{
-    const div = document.createElement("div");
-    div.className="post";
-    div.innerHTML=`
-      <p>${post.content}</p>
-      <p>조회수: ${post.views+1}</p>
-      <div class="comments">
-        <h4>댓글</h4>
-        ${post.comments.map(c=>`<p>- ${c}</p>`).join("")}
-      </div>
-      ${isAdminPC() ? `
-      <div class="comment-form">
-        <input type="text" id="commentInput_${post.id}" placeholder="댓글 작성">
-        <button onclick="addComment('${post.id}')">댓글 등록</button>
-      </div>` : ''}
-    `;
-    postsDiv.appendChild(div);
-  });
-}
-
-// 댓글 입력
-function addComment(id){
-  const input = document.getElementById(`commentInput_${id}`);
-  const post = posts.find(p=>p.id==id);
-  if(!post || !input.value.trim()) return;
-  post.comments.push(input.value.trim());
+  post.views++;
+  const div=document.createElement("div");
+  div.className="post";
+  div.innerHTML=`
+    <p>${post.content}</p>
+    <p>조회수: ${post.views}</p>
+    <div class="comments">
+      <h4>댓글</h4>
+      ${post.comments.map(c=>`<p>- ${c}</p>`).join("")}
+    </div>
+  `;
+  postsDiv.appendChild(div);
   savePosts();
-  input.value="";
-  renderAllPosts();
-}
-
-// 저장
-function savePosts(){ localStorage.setItem("posts", JSON.stringify(posts)); }
-
-// 관리자 버튼 PC에서만
-function checkDevice(){
-  const ua = navigator.userAgent.toLowerCase();
-  const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
-  document.getElementById("adminLink").style.display = isMobile ? "none" : "block";
-}
-
-function isAdminPC(){ 
-  return !/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent.toLowerCase());
-}
-
-window.onload = checkDevice;
-
-// 관리자 로그인 UI 보이기/숨기기
-function toggleAdminLogin(){
-  const form = document.getElementById("adminLoginForm");
-  form.style.display = (form.style.display === "none") ? "block" : "none";
-}
-
-// 관리자 비밀번호 확인
-function checkAdminLogin(){
-  const pw = document.getElementById("adminPw").value;
-  if(pw === "dobong09!"){ 
-    window.location.href="admin.html"; 
-  } else { 
-    alert("비밀번호가 틀렸습니다."); 
-  }
 }
 </script>
 </body>
