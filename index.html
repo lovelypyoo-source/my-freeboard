@@ -2,6 +2,50 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<title>메인 페이지</title>
+<style>
+body { font-family: Arial, sans-serif; padding:20px; background:#eef; }
+h1 { text-align:center; }
+button { padding:10px 20px; margin:10px; border:none; background:#4CAF50; color:#fff; border-radius:5px; cursor:pointer; }
+button:hover { background:#45a049; }
+</style>
+</head>
+<body>
+  <h1>메인 페이지</h1>
+  <button onclick="viewPost()">조회</button>
+  <button onclick="adminLogin()">관리자 페이지</button>
+
+<script>
+// 일반 조회
+function viewPost(){
+  let pw = prompt("비밀번호(4자리)를 입력하세요:");
+  if(!pw || pw.length!==4){ 
+    alert("4자리 비밀번호를 입력하세요.");
+    return;
+  }
+  sessionStorage.setItem("viewPw", pw);
+  window.location.href="view.html";
+}
+
+// 관리자 로그인
+function adminLogin(){
+  let pw = prompt("관리자 비밀번호를 입력하세요:");
+  if(pw === "dobong09!"){
+    sessionStorage.setItem("adminAuth", "true");
+    window.location.href="admin.html";
+  } else {
+    alert("비밀번호가 올바르지 않습니다.");
+  }
+}
+</script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
 <title>나의 게시판</title>
 <style>
 @font-face {
