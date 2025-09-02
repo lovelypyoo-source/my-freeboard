@@ -56,6 +56,9 @@ footer { margin-top:120px; }
   #forms textarea { width:100%; height:250px; font-size:18px; padding:12px; }
   #forms input[type="password"] { font-size:18px; padding:10px; width:100%; }
   #forms button { font-size:18px; padding:12px 25px; }
+
+  /* 모바일에서 관리자 버튼 숨기기 */
+  .admin-link { display:none; }
 }
 
 /* PC textarea 10줄 이상 보이도록 확대 */
@@ -84,8 +87,8 @@ footer { margin-top:120px; }
 <div id="forms"></div>
 <div id="posts"></div>
 
-<!-- 관리자 버튼 하단에 하나만 -->
-<div class="admin-link">
+<!-- 관리자 버튼 하단 하나만, PC에서만 보이도록 -->
+<div class="admin-link" id="adminLink">
   <button onclick="goAdmin()">관리자 페이지</button>
 </div>
 
@@ -137,6 +140,14 @@ function goAdmin(){
     alert("비밀번호가 올바르지 않습니다.");
   }
 }
+
+// PC 여부 확인하여 관리자 버튼 표시
+function checkDevice(){
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
+  document.getElementById("adminLink").style.display = isMobile ? "none" : "block";
+}
+window.onload = checkDevice;
 </script>
 </body>
 </html>
