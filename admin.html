@@ -4,70 +4,82 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 <style>
-body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
-h1 { text-align:center; margin-bottom:30px; }
-.post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-textarea { width:100%; height:60px; }
-button { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:#28a745; color:white; cursor:pointer;}
-button:hover { background:#1e7e34; }
+/* 기존 관리자 스타일 그대로 사용 */
 </style>
+<script>
+  // 세션 인증 확인
+  window.onload = function() {
+    if (sessionStorage.getItem("adminAuth") !== "true") {
+      alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
+      window.location.href = "index.html";
+    }
+  }
+</script>
 </head>
 <body>
-  <h1>관리자 페이지</h1>
-  <div id="allPosts"></div>
+<h1>관리자 페이지 - 전체 게시판</h1>
+<div id="postsContainer"></div>
+<button onclick="logout()">로그아웃</button>
 
 <script>
-if(sessionStorage.getItem("isAdmin")!=="true"){
-  alert("관리자 인증 후 이용하세요.");
-  window.location.href="index.html";
-}
+let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-renderAllPosts();
-
-function renderAllPosts(){
-  const container=document.getElementById("allPosts");
-  container.innerHTML="";
-  posts.forEach((post,i)=>{
-    const div=document.createElement("div");
-    div.className="post-card";
+function renderPosts() {
+  const container = document.getElementById("postsContainer");
+  container.innerHTML = "";
+  posts.forEach((p,index)=>{
+    const div = document.createElement("div");
     div.innerHTML=`
-      <p><strong>글내용:</strong></p>
-      <textarea id="content${i}">${post.content}</textarea><br>
-      <p>조회수: ${post.views}</p>
-      <h4>댓글</h4>
-      <div id="comments${i}">
-        ${post.comments.map((c,ci)=>`
-          <p>${c} <button onclick="deleteComment(${i},${ci})">삭제</button></p>
-        `).join("") || "<p>댓글 없음</p>"}
+      <h2>글 번호 ${index+1}</h2>
+      <textarea id="editContent_${p.id}">${p.content}</textarea>
+      <p>조회수: ${p.views}</p>
+      <div class="comments">
+        <h4>댓글</h4>
+        ${p.comments.map(c=>`<p>- ${c}</p>`).join('')}
+        <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
+        <button onclick="addComment('${p.id}')">댓글 등록</button>
       </div>
-      <textarea id="newComment${i}" placeholder="댓글 입력"></textarea><br>
-      <button onclick="savePost(${i})">수정</button>
-      <button onclick="addComment(${i})">댓글 추가</button>
+      <button onclick="savePost('${p.id}')">저장</button>
+      <button onclick="deletePost('${p.id}')">삭제</button>
     `;
     container.appendChild(div);
   });
 }
 
-function savePost(i){
-  posts[i].content=document.getElementById("content"+i).value;
-  localStorage.setItem("posts",JSON.stringify(posts));
-  alert("수정 완료");
+function addComment(id){
+  const input = document.getElementById(`commentInput_${id}`);
+  const post = posts.find(p=>p.id==id);
+  if(!post || !input.value.trim()) return;
+  post.comments.push(input.value.trim());
+  savePosts();
+  input.value="";
+  renderPosts();
 }
 
-function addComment(i){
-  const comment=document.getElementById("newComment"+i).value.trim();
-  if(!comment) return;
-  posts[i].comments.push(comment);
-  localStorage.setItem("posts",JSON.stringify(posts));
-  renderAllPosts();
+function savePost(id){
+  const post = posts.find(p=>p.id==id);
+  post.content = document.getElementById(`editContent_${id}`).value;
+  savePosts();
+  alert("저장 완료");
+  renderPosts();
 }
 
-function deleteComment(i,ci){
-  posts[i].comments.splice(ci,1);
-  localStorage.setItem("posts",JSON.stringify(posts));
-  renderAllPosts();
+function deletePost(id){
+  if(!confirm("삭제하시겠습니까?")) return;
+  posts = posts.filter(p=>p.id!=id);
+  savePosts();
+  renderPosts();
 }
+
+function savePosts(){ localStorage.setItem("posts", JSON.stringify(posts)); }
+
+function logout(){
+  sessionStorage.removeItem("adminAuth");
+  alert("로그아웃 되었습니다.");
+  window.location.href="index.html";
+}
+
+renderPosts();
 </script>
 </body>
 </html>
