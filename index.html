@@ -27,6 +27,22 @@ button:hover { background:#45a049; }
 .comment-form input { padding:32px; font-size:40px; width:100%; box-sizing:border-box; border-radius:16px; border:2px solid #ccc; }
 .comment-form button { font-size:40px; padding:24px 48px; background-color:#2196F3; }
 
+
+    <h1>메인 페이지</h1>
+  <button onclick="viewPost()">조회</button>
+
+<script>
+function viewPost(){
+  let pw = prompt("비밀번호(4자리)를 입력하세요:");
+  if(!pw || pw.length!==4){ 
+    alert("4자리 비밀번호를 입력하세요.");
+    return;
+  }
+  // 저장
+  sessionStorage.setItem("viewPw", pw);
+  // view.html로 이동
+  window.location.href="view.html";
+}
 <h1>게시판</h1>
 
   <h3>글쓰기</h3>
