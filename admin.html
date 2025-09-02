@@ -1,140 +1,69 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
-<script src="config.js"></script>
-<script>
-  // 세션 인증 확인
-  window.onload = function() {
-    if (sessionStorage.getItem("adminAuth") !== "true") {
-      alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
-      window.location.href = "index.html";
-    }
-  }
-</script>
 <style>
 body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
 h1 { text-align:center; margin-bottom:30px; }
-
-.post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-.post-card h2 { font-size:18px; margin-bottom:10px; }
-.post-card textarea { width:100%; margin-bottom:10px; display:none; font-size:16px; }
-.post-card .comments { display:none; margin-bottom:10px; }
-.post-card .comments input { width:100%; padding:8px; font-size:14px; margin-top:5px; margin-bottom:5px; }
-.post-card button { padding:6px 12px; font-size:14px; margin:2px; cursor:pointer; }
-
-.logout {
-  display:block;
-  margin:30px auto 0;
-  padding:10px 20px;
-  background:#ff5c5c;
-  color:white;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:16px;
-}
-.logout:hover { background:#e04848; }
-
-@media (max-width:768px) {
-  .post-card textarea { font-size:16px; }
-  .post-card .comments input { font-size:16px; }
-  .post-card button { font-size:16px; padding:10px 15px; }
-}
+.post { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; max-width:600px; margin:auto; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+.comments { margin-top:10px; padding-top:10px; border-top:1px solid #ddd; }
+textarea { width:100%; height:50px; margin-top:5px; }
+button { margin-top:5px; }
 </style>
 </head>
 <body>
-<h1>관리자 페이지 - 전체 게시판</h1>
-<div id="postsContainer"></div>
-<button class="logout" onclick="logout()">로그아웃</button>
+  <h1>관리자 페이지</h1>
+  <div id="posts"></div>
 
 <script>
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+if(sessionStorage.getItem("isAdmin")!=="true"){
+  alert("관리자 인증 후 이용하세요.");
+  window.location.href="index.html";
+}
 
-// 게시판 렌더링
-function renderPosts() {
-  const container = document.getElementById("postsContainer");
-  container.innerHTML = "";
+let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+renderPosts();
 
-  posts.forEach((p,index)=>{
-    const div = document.createElement("div");
-    div.className = "post-card";
-    div.innerHTML = `
-      <h2>글 번호 ${index+1}</h2>
-      <input type="password" id="pwInput_${p.id}" placeholder="글 비밀번호 입력">
-      <button onclick="checkPassword('${p.id}')">확인</button>
-      <textarea id="editContent_${p.id}">${p.content}</textarea>
-      <p>조회수: ${p.views}</p>
+function renderPosts(){
+  const postsDiv=document.getElementById("posts");
+  postsDiv.innerHTML="";
+  posts.forEach((post,idx)=>{
+    const div=document.createElement("div");
+    div.className="post";
+    div.innerHTML=`
+      <p>${post.content}</p>
+      <p>조회수: ${post.views}</p>
       <div class="comments">
         <h4>댓글</h4>
-        ${p.comments.map(c=>`<p>- ${c}</p>`).join('')}
-        <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
-        <button onclick="addComment('${p.id}')">댓글 등록</button>
+        ${post.comments.map((c,i)=>`
+          <p>- ${c} <button onclick="editComment(${idx},${i})">수정</button></p>
+        `).join("") || "<p>댓글 없음</p>"}
+        <textarea id="cmt-${idx}" placeholder="댓글 입력"></textarea>
+        <button onclick="addComment(${idx})">댓글 달기</button>
       </div>
-      <button onclick="savePost('${p.id}')">저장</button>
-      <button onclick="deletePost('${p.id}')">삭제</button>
     `;
-    container.appendChild(div);
+    postsDiv.appendChild(div);
   });
 }
 
-// 비밀번호 확인
-function checkPassword(id){
-  const input = document.getElementById(`pwInput_${id}`).value;
-  const post = posts.find(p=>p.id==id);
-  if(input === post.pw){
-    document.getElementById(`editContent_${id}`).style.display = "block";
-    document.querySelector(`#editContent_${id}`).nextElementSibling.style.display = "block"; // 조회수
-    const commentsDiv = document.querySelector(`#editContent_${id}`).parentElement.querySelector(".comments");
-    commentsDiv.style.display = "block";
-    alert("비밀번호 확인 완료. 글 내용을 볼 수 있습니다.");
-  } else {
-    alert("비밀번호가 틀렸습니다.");
+function addComment(idx){
+  const input=document.getElementById("cmt-"+idx);
+  const txt=input.value.trim();
+  if(!txt){ alert("댓글 내용을 입력하세요."); return; }
+  posts[idx].comments.push(txt);
+  localStorage.setItem("posts",JSON.stringify(posts));
+  renderPosts();
+}
+
+function editComment(postIdx,cmtIdx){
+  const newTxt=prompt("댓글 수정:",posts[postIdx].comments[cmtIdx]);
+  if(newTxt!==null){
+    posts[postIdx].comments[cmtIdx]=newTxt.trim();
+    localStorage.setItem("posts",JSON.stringify(posts));
+    renderPosts();
   }
 }
-
-// 댓글 등록
-function addComment(id){
-  const input=document.getElementById(`commentInput_${id}`);
-  const post=posts.find(p=>p.id==id);
-  if(!post || !input.value.trim()) return;
-  post.comments.push(input.value.trim());
-  savePosts();
-  input.value="";
-  renderPosts();
-}
-
-// 글 저장
-function savePost(id){
-  const post=posts.find(p=>p.id==id);
-  post.content=document.getElementById(`editContent_${id}`).value;
-  savePosts();
-  alert("저장 완료");
-  renderPosts();
-}
-
-// 글 삭제
-function deletePost(id){
-  if(!confirm("삭제하시겠습니까?")) return;
-  posts = posts.filter(p=>p.id!=id);
-  savePosts();
-  renderPosts();
-}
-
-// 로컬스토리지 저장
-function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
-
-// 로그아웃
-function logout() {
-  sessionStorage.removeItem("adminAuth");
-  alert("로그아웃 되었습니다.");
-  window.location.href = "index.html";
-}
-
-// 초기 렌더링
-renderPosts();
 </script>
 </body>
 </html>
