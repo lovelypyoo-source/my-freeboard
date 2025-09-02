@@ -4,161 +4,69 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 <style>
-body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
+body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
 h1 { text-align:center; margin-bottom:30px; }
-.toolbar { text-align:center; margin-bottom:20px; }
-.post-card { background:#fff; padding:15px; margin:0 auto 20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); max-width:900px; }
-.post-card h2 { font-size:18px; margin:0 0 10px; }
-.post-card textarea { width:100%; height:120px; font-size:16px; padding:8px; box-sizing:border-box; }
-.meta { color:#666; font-size:14px; margin:6px 0; }
-.actions button { padding:6px 12px; font-size:14px; margin:4px 4px 0 0; cursor:pointer; }
-.comments { margin-top:12px; padding-top:12px; border-top:1px solid #eee; }
-.comment-row { display:flex; gap:8px; align-items:center; margin:4px 0; }
-.comment-row span { flex:1; text-align:left; }
-.comment-row button { font-size:12px; padding:4px 8px; }
-.add-comment { display:flex; gap:8px; margin-top:8px; }
-.add-comment input { flex:1; padding:8px; font-size:14px; }
-.logout { display:inline-block; padding:8px 14px; background:#ff5c5c; color:#fff; border:none; border-radius:8px; cursor:pointer; }
-.logout:hover { background:#e04848; }
+.post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+textarea { width:100%; height:60px; }
+button { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:#28a745; color:white; cursor:pointer;}
+button:hover { background:#1e7e34; }
 </style>
 </head>
 <body>
   <h1>관리자 페이지</h1>
-  <div class="toolbar">
-    <button class="logout" onclick="logout()">로그아웃</button>
-  </div>
-  <div id="postsContainer"></div>
+  <div id="allPosts"></div>
 
 <script>
-// ===== 인증 보장: 인덱스에서 못 넘어왔더라도 여기서 재인증 처리 =====
-(function ensureAdmin(){
-  const ok = sessionStorage.getItem("adminAuth")==="true";
-  if(ok) return;
-  const input = prompt("관리자 비밀번호를 입력하세요:");
-  if(input==="dobong09!"){
-    sessionStorage.setItem("adminAuth","true");
-    return; // 그대로 진행
-  }else{
-    alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
-    window.location.href = "index.html";
-  }
-})();
-
-// ===== 데이터 유틸 =====
-function getPosts(){
-  try { return JSON.parse(localStorage.getItem("posts")||"[]"); }
-  catch(e){ return []; }
+if(sessionStorage.getItem("isAdmin")!=="true"){
+  alert("관리자 인증 후 이용하세요.");
+  window.location.href="index.html";
 }
-function setPosts(arr){ localStorage.setItem("posts", JSON.stringify(arr)); }
 
-let posts = getPosts();
-renderPosts();
+let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+renderAllPosts();
 
-function renderPosts(){
-  posts = getPosts(); // 최신 반영
-  const container = document.getElementById("postsContainer");
-  container.innerHTML = "";
-
-  if(posts.length===0){
-    container.innerHTML = "<p style='text-align:center;color:#777;'>등록된 글이 없습니다.</p>";
-    return;
-  }
-
-  posts.forEach((p, idx)=>{
-    const div = document.createElement("div");
-    div.className = "post-card";
-    div.innerHTML = `
-      <h2>글 #${idx+1} (ID: ${p.id || "-"})</h2>
-      <div class="meta">조회수: ${p.views || 0} / 비밀번호(참고): ${p.pw || "-"}</div>
-      <textarea id="content_${idx}">${p.content || ""}</textarea>
-      <div class="actions">
-        <button onclick="savePost(${idx})">내용 저장</button>
-        <button onclick="deletePost(${idx})">글 삭제</button>
-        <button onclick="incView(${idx})">조회수 +1</button>
+function renderAllPosts(){
+  const container=document.getElementById("allPosts");
+  container.innerHTML="";
+  posts.forEach((post,i)=>{
+    const div=document.createElement("div");
+    div.className="post-card";
+    div.innerHTML=`
+      <p><strong>글내용:</strong></p>
+      <textarea id="content${i}">${post.content}</textarea><br>
+      <p>조회수: ${post.views}</p>
+      <h4>댓글</h4>
+      <div id="comments${i}">
+        ${post.comments.map((c,ci)=>`
+          <p>${c} <button onclick="deleteComment(${i},${ci})">삭제</button></p>
+        `).join("") || "<p>댓글 없음</p>"}
       </div>
-      <div class="comments" id="comments_${idx}">
-        <h3 style="text-align:left;margin:10px 0;">댓글</h3>
-        <div id="commentList_${idx}">
-          ${renderCommentListHTML(p, idx)}
-        </div>
-        <div class="add-comment">
-          <input type="text" id="newComment_${idx}" placeholder="댓글 입력">
-          <button onclick="addComment(${idx})">등록</button>
-        </div>
-      </div>
+      <textarea id="newComment${i}" placeholder="댓글 입력"></textarea><br>
+      <button onclick="savePost(${i})">수정</button>
+      <button onclick="addComment(${i})">댓글 추가</button>
     `;
     container.appendChild(div);
   });
 }
 
-function renderCommentListHTML(post, postIdx){
-  const arr = post.comments || [];
-  if(arr.length===0) return `<p style="color:#777; text-align:left;">댓글 없음</p>`;
-  return arr.map((c,i)=>`
-    <div class="comment-row">
-      <span>- ${c}</span>
-      <button onclick="editComment(${postIdx},${i})">수정</button>
-      <button onclick="deleteComment(${postIdx},${i})">삭제</button>
-    </div>
-  `).join("");
+function savePost(i){
+  posts[i].content=document.getElementById("content"+i).value;
+  localStorage.setItem("posts",JSON.stringify(posts));
+  alert("수정 완료");
 }
 
-// ===== 글 조작 =====
-function savePost(idx){
-  const ta = document.getElementById(`content_${idx}`);
-  posts[idx].content = ta.value;
-  setPosts(posts);
-  alert("저장 완료");
-  renderPosts();
+function addComment(i){
+  const comment=document.getElementById("newComment"+i).value.trim();
+  if(!comment) return;
+  posts[i].comments.push(comment);
+  localStorage.setItem("posts",JSON.stringify(posts));
+  renderAllPosts();
 }
 
-function deletePost(idx){
-  if(!confirm("정말 삭제하시겠습니까?")) return;
-  posts.splice(idx,1);
-  setPosts(posts);
-  renderPosts();
-}
-
-function incView(idx){
-  posts[idx].views = (posts[idx].views||0)+1;
-  setPosts(posts);
-  renderPosts();
-}
-
-// ===== 댓글 조작 =====
-function addComment(idx){
-  const input = document.getElementById(`newComment_${idx}`);
-  const val = input.value.trim();
-  if(!val){ alert("댓글 내용을 입력하세요."); return; }
-  posts[idx].comments = posts[idx].comments || [];
-  posts[idx].comments.push(val);
-  setPosts(posts);
-  input.value="";
-  // 부분 갱신
-  document.getElementById(`commentList_${idx}`).innerHTML = renderCommentListHTML(posts[idx], idx);
-}
-
-function editComment(postIdx, cmtIdx){
-  const current = (posts[postIdx].comments||[])[cmtIdx] || "";
-  const next = prompt("댓글 수정", current);
-  if(next===null) return;
-  posts[postIdx].comments[cmtIdx] = next.trim();
-  setPosts(posts);
-  document.getElementById(`commentList_${postIdx}`).innerHTML = renderCommentListHTML(posts[postIdx], postIdx);
-}
-
-function deleteComment(postIdx, cmtIdx){
-  if(!confirm("댓글을 삭제하시겠습니까?")) return;
-  posts[postIdx].comments.splice(cmtIdx,1);
-  setPosts(posts);
-  document.getElementById(`commentList_${postIdx}`).innerHTML = renderCommentListHTML(posts[postIdx], postIdx);
-}
-
-// ===== 로그아웃 =====
-function logout(){
-  sessionStorage.removeItem("adminAuth");
-  alert("로그아웃 되었습니다.");
-  window.location.href = "index.html";
+function deleteComment(i,ci){
+  posts[i].comments.splice(ci,1);
+  localStorage.setItem("posts",JSON.stringify(posts));
+  renderAllPosts();
 }
 </script>
 </body>
