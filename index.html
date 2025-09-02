@@ -157,21 +157,6 @@ function addPost(){
 // 저장
 function savePosts(){ localStorage.setItem("posts", JSON.stringify(posts)); }
 
-// 조회 비밀번호 입력 → view.html로 이동
-function showViewPwForm(){
-  const inputPw = prompt("작성 시 입력했던 4자리 비밀번호를 입력하세요:");
-  if(!inputPw) return;
-  if(inputPw.length !== 4){ alert("4자리 비밀번호를 입력하세요."); return; }
-
-  const myPosts = posts.filter(p=>p.pw===inputPw);
-  if(myPosts.length===0){
-    alert("해당 비밀번호로 작성한 글이 없습니다.");
-    return;
-  }
-  // view.html로 비밀번호 전달
-  window.location.href = "view.html?pw=" + encodeURIComponent(inputPw);
-}
-
 // 관리자 버튼 PC에서만 노출
 function checkDevice(){
   const ua = navigator.userAgent.toLowerCase();
