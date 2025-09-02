@@ -3,6 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
+<style>
+body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
+h1 { text-align:center; margin-bottom:30px; }
+
+.post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.post-card h2 { font-size:18px; margin-bottom:10px; }
+.post-card textarea { width:100%; margin-bottom:10px; font-size:16px; }
+.post-card .comments { margin-bottom:10px; }
+.post-card .comments input { width:100%; padding:8px; font-size:14px; margin-top:5px; margin-bottom:5px; }
+.post-card button { padding:6px 12px; font-size:14px; margin:2px; cursor:pointer; }
+
+.logout {
+  display:block;
+  margin:30px auto 0;
+  padding:10px 20px;
+  background:#ff5c5c;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:16px;
+}
+.logout:hover { background:#e04848; }
+
+@media (max-width:768px) {
+  .post-card textarea { font-size:16px; }
+  .post-card .comments input { font-size:16px; }
+  .post-card button { font-size:16px; padding:10px 15px; }
+}
+</style>
+</head>
+<body>
+<h1>관리자 페이지 - 전체 게시판</h1>
+<div id="postsContainer"></div>
+<button class="logout" onclick="logout()">로그아웃</button>
+
+<script>
+// 관리자 인증 확인
+if(sessionStorage.getItem("adminAuth") !== "true"){
+  alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
+  window.location.href="index.html";
+}
+
+let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+
+// 게시판 렌더링
+function renderPosts() {
+  const container = document.getElementById("postsContainer");
+  container.innerHTML = "";
+
+  posts.forEach((p,index)=>{
+    const div = document.createElement("div");
+    div.className = "post-card";
+    div.innerHTML = `
+      <h2>글 번호 ${index+1}</h2>
+      <textarea id="editContent_${p.id}">${p.content}</textarea>
+      <p>조회수: ${p.views}</p>
+      <div class="comments">
+        <h4>댓글</h4>
+        ${p.comments.map(c=>`<p>- ${c}</p>`).join('') || "<p>댓글 없음</p>"}
+        <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
+        <button onclick="addComment('${p.id}')">댓글 등록</button>
+      </div>
+      <button onclick="savePost('${p.id}')">저장</button>
+      <button onclick="deletePost('${p.id}')">삭제</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// 댓글 등록
+function addComment(id){
+  const input=document.getElementById(`commentInput_${id}`);
+  const post=posts.find(p=>p.id==id);
+  if(!post || !input.value.trim()) return;
+  post.comments.push(input.value.trim());
+  savePosts();
+  input.value="";
+  renderPosts();
+}
+
+// 글 저장
+function savePost(id){
+  const post=posts.find(p=>p.id==id);
+  post.content=document.getElementById(`editContent_${id}`).value;
+  savePosts();
+  alert("저장 완료");
+  renderPosts();
+}
+
+// 글 삭제
+function deletePost(id){
+  if(!confirm("삭제하시겠습니까?")) return;
+  posts = posts.filter(p=>p.id!=id);
+  savePosts();
+  renderPosts();
+}
+
+// 로컬스토리지 저장
+function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
+
+// 로그아웃
+function logout() {
+  sessionStorage.removeItem("adminAuth");
+  alert("로그아웃 되었습니다.");
+  window.location.href = "index.html";
+}
+
+// 초기 렌더링
+renderPosts();
+</script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>관리자 페이지</title>
 <script src="config.js"></script>
 <script>
   // 세션 인증 확인
