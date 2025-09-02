@@ -71,7 +71,7 @@ footer { margin-top:120px; }
   <div class="speech-bubble">어떤 건의사항이 있으신가요?</div>
   <div class="buttons">
     <button onclick="showWriteForm()">글쓰기</button>
-    <button onclick="showViewPwForm()">조회</button>
+    <button onclick="showViewForm()">조회</button>
   </div>
   <img src="그림2.png" alt="그림2" class="main-image">
 </div>
@@ -114,38 +114,69 @@ function addPost(){
   document.getElementById("forms").innerHTML="";
 }
 
+// 글 조회
+function showViewForm(){
+  renderAllPosts(); 
+}
+
+// 글 전체 표시
+function renderAllPosts(){
+  const postsDiv = document.getElementById("posts");
+  postsDiv.innerHTML="";
+  posts.forEach(post=>{
+    const div = document.createElement("div");
+    div.className="post";
+    div.innerHTML=`
+      <p>${post.content}</p>
+      <p>조회수: ${post.views+1}</p>
+      <div class="comments">
+        <h4>댓글</h4>
+        ${post.comments.map(c=>`<p>- ${c}</p>`).join("")}
+      </div>
+      ${isAdminPC() ? `
+      <div class="comment-form">
+        <input type="text" id="commentInput_${post.id}" placeholder="댓글 작성">
+        <button onclick="addComment('${post.id}')">댓글 등록</button>
+      </div>` : ''}
+    `;
+    postsDiv.appendChild(div);
+  });
+}
+
+// 댓글 입력
+function addComment(id){
+  const input = document.getElementById(`commentInput_${id}`);
+  const post = posts.find(p=>p.id==id);
+  if(!post || !input.value.trim()) return;
+  post.comments.push(input.value.trim());
+  savePosts();
+  input.value="";
+  renderAllPosts();
+}
+
 // 저장
 function savePosts(){ localStorage.setItem("posts", JSON.stringify(posts)); }
 
-// 조회 비밀번호 입력 → view.html로 이동
-function showViewPwForm(){
-  const inputPw = prompt("작성 시 입력했던 4자리 비밀번호를 입력하세요:");
-  if(!inputPw) return;
-  if(inputPw.length !== 4){ alert("4자리 비밀번호를 입력하세요."); return; }
-
-  const myPosts = posts.filter(p=>p.pw===inputPw);
-  if(myPosts.length===0){
-    alert("해당 비밀번호로 작성한 글이 없습니다.");
-    return;
-  }
-  // view.html로 비밀번호 전달
-  window.location.href = "view.html?pw=" + encodeURIComponent(inputPw);
-}
-
-// 관리자 버튼 PC에서만 노출
+// 관리자 버튼 PC에서만
 function checkDevice(){
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
   document.getElementById("adminLink").style.display = isMobile ? "none" : "block";
 }
 
+function isAdminPC(){ 
+  return !/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent.toLowerCase());
+}
+
 window.onload = checkDevice;
 
+// 관리자 로그인 UI 보이기/숨기기
 function toggleAdminLogin(){
   const form = document.getElementById("adminLoginForm");
   form.style.display = (form.style.display === "none") ? "block" : "none";
 }
 
+// 관리자 비밀번호 확인
 function checkAdminLogin(){
   const pw = document.getElementById("adminPw").value;
   if(pw === "dobong09!"){ 
