@@ -2,58 +2,135 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>메인 페이지</title>
+<title>나의 게시판</title>
 <style>
-body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
-h1 { text-align:center; margin-bottom:20px; }
-button { padding:10px 15px; margin:5px; border:none; border-radius:5px; cursor:pointer; }
-#adminBtn { font-size:12px; display:block; margin:30px auto 0; color:#555; background:#eee; }
+@font-face {
+  font-family: 'KOROAD';
+  src: url('KOROAD.ttf') format('truetype');
+}
+body { font-family: 'KOROAD', Arial, sans-serif; margin:0; padding:0; text-align:center; background:#f9f9f9; }
+header { display:flex; align-items:center; justify-content:center; background:#f5f5f5; padding:60px; flex-wrap:wrap; }
+header h1 { margin:0; font-size:96px; }
+header img { margin-left:40px; height:160px; }
+.main-box { margin:80px auto; display:flex; flex-direction:column; align-items:center; gap:60px; padding:0 100px; max-width:2400px; }
+.speech-bubble { position:relative; background:#fff; border:2px solid #ddd; border-radius:60px; padding:120px; font-size:72px; font-weight:bold; max-width:95%; box-shadow:4px 4px 32px rgba(0,0,0,0.1); }
+.speech-bubble::after { content:""; position:absolute; bottom:-80px; left:160px; border-width:80px 80px 0; border-style:solid; border-color:#fff transparent transparent transparent; filter:drop-shadow(4px 8px 8px rgba(0,0,0,0.1)); }
+.buttons { display:flex; justify-content:center; gap:60px; flex-wrap:wrap; z-index:1; }
+button { font-size:56px; padding:40px 80px; border:none; border-radius:32px; background:#4CAF50; color:white; cursor:pointer; min-width:360px; }
+button:hover { background:#45a049; }
+.main-image { max-width:40%; width:auto; height:auto; margin-top:40px; }
+
+/* 하단 관리자 버튼 (작게) */
+.admin-btn {
+  font-size:20px;
+  padding:8px 16px;
+  border:none;
+  border-radius:8px;
+  background:#666;
+  color:#fff;
+  cursor:pointer;
+  margin:40px auto 0;
+  display:inline-block;
+}
+.admin-btn:hover { background:#444; }
+
+/* 모바일 최적화 */
+@media (max-width:768px) {
+  header h1 { font-size:36px; }
+  header img { height:60px; }
+  .speech-bubble { font-size:28px; padding:45px; }
+  .buttons button { font-size:24px; padding:16px 32px; width:45%; }
+  .main-image { max-width:90%; margin-top:15px; }
+}
+
+/* 글쓰기 입력 폼 크기 */
+#writeBox { margin-top:20px; }
+#writeBox textarea { width:90vw; max-width:1000px; height:240px; font-size:24px; padding:12px; }
+#writeBox input[type="password"] { font-size:24px; padding:10px; width:300px; }
+#writeBox .submit-btn { font-size:28px; padding:14px 28px; margin-top:10px; }
 </style>
 </head>
 <body>
-  <h1>자유게시판</h1>
+<header>
+  <h1>나의 게시판</h1>
+  <img src="그림1.png" alt="그림1">
+</header>
 
-  <textarea id="content" placeholder="내용을 입력하세요"></textarea><br>
-  <input type="password" id="pw" maxlength="4" placeholder="비밀번호(4자리)"><br>
-  <button onclick="savePost()">글쓰기</button>
-  <button onclick="checkPwAndView()">조회</button>
-  <button id="adminBtn" onclick="goAdmin()">관리자 페이지</button>
+<div class="main-box">
+  <div class="speech-bubble">어떤 건의사항이 있으신가요?</div>
+
+  <div class="buttons">
+    <button onclick="toggleWrite()">글쓰기</button>
+    <button onclick="goView()">조회</button>
+  </div>
+
+  <div id="writeBox" style="display:none;">
+    <h3>글쓰기</h3>
+    <textarea id="content" placeholder="내용을 입력하세요"></textarea><br>
+    <input type="password" id="pw" placeholder="비밀번호(숫자 4자리)" maxlength="4">
+    <div><button class="submit-btn" onclick="savePost()">입력완료</button></div>
+  </div>
+
+  <img src="그림2.png" alt="그림2" class="main-image">
+</div>
+
+<!-- 하단: 작은 관리자 버튼 하나만 -->
+<div>
+  <button class="admin-btn" onclick="goAdmin()">관리자 페이지</button>
+</div>
 
 <script>
+function getPosts(){
+  try { return JSON.parse(localStorage.getItem("posts")||"[]"); }
+  catch(e){ return []; }
+}
+function setPosts(arr){ localStorage.setItem("posts", JSON.stringify(arr)); }
+
+// 글쓰기 토글
+function toggleWrite(){
+  const box = document.getElementById('writeBox');
+  box.style.display = (box.style.display==='none') ? 'block' : 'none';
+}
+
+// 글 저장
 function savePost(){
-  const content=document.getElementById("content").value.trim();
-  const pw=document.getElementById("pw").value.trim();
-  if(!content||pw.length!==4){
-    alert("내용과 4자리 비밀번호를 입력하세요.");
-    return;
-  }
-  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-  posts.push({content, pw, views:0, comments:[]});
-  localStorage.setItem("posts",JSON.stringify(posts));
-  alert("저장되었습니다.");
+  const content = document.getElementById("content").value.trim();
+  const pw = (document.getElementById("pw").value||"").trim();
+  if(!content){ alert("내용을 입력하세요."); return; }
+  if(!/^\d{4}$/.test(pw)){ alert("비밀번호는 숫자 4자리입니다."); return; }
+
+  const posts = getPosts();
+  posts.push({ id: Date.now(), content, pw, views:0, comments:[] });
+  setPosts(posts);
+
+  alert("글이 등록되었습니다.");
   document.getElementById("content").value="";
   document.getElementById("pw").value="";
+  document.getElementById("writeBox").style.display="none";
 }
 
-function checkPwAndView(){
-  const inputPw=prompt("조회할 글의 비밀번호 4자리를 입력하세요:");
+// 조회: 프롬프트에서 4자리 비밀번호 확인 → view.html
+function goView(){
+  const inputPw = prompt("본인 글의 비밀번호(숫자 4자리)를 입력하세요:");
   if(!inputPw) return;
-  let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-  const match=posts.some(p=>p.pw===inputPw);
-  if(match){
-    sessionStorage.setItem("viewPw",inputPw);
-    window.location.href="view.html";
-  }else{
-    alert("해당 비밀번호의 글이 없습니다.");
-  }
+  if(!/^\d{4}$/.test(inputPw)){ alert("비밀번호는 숫자 4자리입니다."); return; }
+
+  const posts = getPosts();
+  const exists = posts.some(p=>p.pw===inputPw);
+  if(!exists){ alert("해당 비밀번호로 작성된 글이 없습니다."); return; }
+
+  sessionStorage.setItem("viewPw", inputPw);
+  window.location.href = "view.html";
 }
 
+// 관리자: 프롬프트에서 관리자 비밀번호 확인 → admin.html
 function goAdmin(){
-  const input=prompt("관리자 비밀번호를 입력하세요:");
-  if(input==="dobong09!"){
-    sessionStorage.setItem("isAdmin","true");
-    window.location.href="admin.html";
-  }else{
+  const adminPw = prompt("관리자 비밀번호를 입력하세요:");
+  if(adminPw === "dobong09!"){
+    // 세션 인증 키 통일
+    sessionStorage.setItem("adminAuth","true");
+    window.location.href = "admin.html";
+  }else if(adminPw !== null){
     alert("비밀번호가 틀렸습니다.");
   }
 }
