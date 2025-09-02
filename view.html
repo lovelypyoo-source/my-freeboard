@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -17,10 +15,9 @@ h1 { text-align:center; }
   <div id="posts"></div>
 
 <script>
-let posts = JSON.parse(localStorage.getItem("posts")||"[]");
-let pw = sessionStorage.getItem("viewPw");
+let posts=JSON.parse(localStorage.getItem("posts")||"[]");
+let pw=sessionStorage.getItem("viewPw");
 
-// 비밀번호 없으면 접근 차단
 if(!pw){
   alert("비밀번호 인증 후 이용하세요.");
   window.location.href="index.html";
