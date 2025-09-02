@@ -71,7 +71,7 @@ footer { margin-top:120px; }
   <div class="speech-bubble">어떤 건의사항이 있으신가요?</div>
   <div class="buttons">
     <button onclick="showWriteForm()">글쓰기</button>
-    <button onclick="showViewForm()">조회</button>
+    <button onclick="goView()">조회</button>
   </div>
   <img src="그림2.png" alt="그림2" class="main-image">
 </div>
@@ -105,78 +105,45 @@ function showWriteForm(){
 }
 
 function addPost(){
-  const content = document.getElementById("content").value;
-  const pw = document.getElementById("pw").value;
-  if(!content||pw.length!==4){ alert("내용과 4자리 비밀번호를 입력하세요."); return; }
+  const content = document.getElementById("content").value.trim();
+  const pw = document.getElementById("pw").value.trim();
+  if(!content || pw.length!==4){ alert("내용과 4자리 비밀번호를 입력하세요."); return; }
   posts.push({ id: Date.now(), content, pw, views:0, comments:[] });
   savePosts();
   alert("글이 등록되었습니다.");
   document.getElementById("forms").innerHTML="";
 }
 
-// 글 조회
-function showViewForm(){
-  renderAllPosts(); 
-}
-
-// 글 전체 표시
-function renderAllPosts(){
-  const postsDiv = document.getElementById("posts");
-  postsDiv.innerHTML="";
-  posts.forEach(post=>{
-    const div = document.createElement("div");
-    div.className="post";
-    div.innerHTML=`
-      <p>${post.content}</p>
-      <p>조회수: ${post.views+1}</p>
-      <div class="comments">
-        <h4>댓글</h4>
-        ${post.comments.map(c=>`<p>- ${c}</p>`).join("")}
-      </div>
-      ${isAdminPC() ? `
-      <div class="comment-form">
-        <input type="text" id="commentInput_${post.id}" placeholder="댓글 작성">
-        <button onclick="addComment('${post.id}')">댓글 등록</button>
-      </div>` : ''}
-    `;
-    postsDiv.appendChild(div);
-  });
-}
-
-// 댓글 입력
-function addComment(id){
-  const input = document.getElementById(`commentInput_${id}`);
-  const post = posts.find(p=>p.id==id);
-  if(!post || !input.value.trim()) return;
-  post.comments.push(input.value.trim());
-  savePosts();
-  input.value="";
-  renderAllPosts();
+// 조회 버튼 → 비밀번호 프롬프트 → 맞으면 view.html 이동
+function goView(){
+  const inputPw = prompt("본인 글 비밀번호(4자리)를 입력하세요:");
+  if(!inputPw) return;
+  if(inputPw.length!==4){ alert("비밀번호는 4자리입니다."); return; }
+  const myPosts = posts.filter(p=>p.pw===inputPw);
+  if(myPosts.length===0){ alert("해당 비밀번호로 작성된 글이 없습니다."); return; }
+  sessionStorage.setItem("viewPw", inputPw);
+  window.location.href="view.html";
 }
 
 // 저장
 function savePosts(){ localStorage.setItem("posts", JSON.stringify(posts)); }
 
-// 관리자 버튼 PC에서만
+// 관리자 버튼 PC에서만 보이도록
 function checkDevice(){
   const ua = navigator.userAgent.toLowerCase();
   const isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
   document.getElementById("adminLink").style.display = isMobile ? "none" : "block";
 }
-
 function isAdminPC(){ 
   return !/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent.toLowerCase());
 }
-
 window.onload = checkDevice;
 
-// 관리자 로그인 UI 보이기/숨기기
+// 관리자 로그인 UI
 function toggleAdminLogin(){
   const form = document.getElementById("adminLoginForm");
   form.style.display = (form.style.display === "none") ? "block" : "none";
 }
-
-// 관리자 비밀번호 확인
 function checkAdminLogin(){
   const pw = document.getElementById("adminPw").value;
   if(pw === "dobong09!"){ 
