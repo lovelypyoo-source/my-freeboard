@@ -31,7 +31,12 @@ function renderPosts() {
   const currentDate = new Date();
 
   posts.forEach((p, index) => {
-    const postDate = new Date(p.createdAt);
+    const postDate = new Date(p.createdAt);  // 문자열로 저장된 createdAt을 Date 객체로 변환
+    if (isNaN(postDate)) {
+      console.error(`Invalid date for post ID: ${p.id}`);
+      return; // Invalid date인 경우 해당 글을 표시하지 않음
+    }
+    
     const diffInTime = currentDate - postDate;
     const diffInDays = diffInTime / (1000 * 3600 * 24); // 일 단위 차이
 
@@ -44,7 +49,7 @@ function renderPosts() {
     div.innerHTML = `
       <h2>글 번호 ${index+1}</h2>
       <textarea id="editContent_${p.id}">${p.content}</textarea>
-      <p>작성일: ${postDate.toLocaleDateString()}</p>
+      <p>작성일: ${postDate.toLocaleDateString()}</p>  <!-- 작성일을 사람이 읽을 수 있는 형식으로 출력 -->
       <p>조회수: ${p.views}</p>
       <div class="comments">
         <h4>댓글</h4>
