@@ -31,10 +31,13 @@ function renderPosts() {
   const currentDate = new Date();
 
   posts.forEach((p, index) => {
-    const postDate = new Date(p.createdAt);  // 문자열로 저장된 createdAt을 Date 객체로 변환
+    // 'createdAt'을 Date 객체로 변환할 때, 유효한 날짜인지 체크
+    const postDate = new Date(p.createdAt); 
+
+    // 만약 변환된 postDate가 Invalid Date일 경우, 콘솔에 에러를 출력하고 해당 글을 skip
     if (isNaN(postDate)) {
       console.error(`Invalid date for post ID: ${p.id}`);
-      return; // Invalid date인 경우 해당 글을 표시하지 않음
+      return; // Invalid date인 경우 해당 글을 렌더링하지 않음
     }
     
     const diffInTime = currentDate - postDate;
