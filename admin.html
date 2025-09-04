@@ -5,6 +5,10 @@
 <title>관리자 페이지</title>
 <style>
 /* 기존 관리자 스타일 그대로 사용 */
+textarea { width: 100%; min-height: 80px; margin-bottom: 10px; }
+.comment-box { margin-top: 10px; padding: 10px; background: #f4f4f4; border-radius: 8px; }
+.comment-item { display: flex; align-items: center; justify-content: space-between; margin: 3px 0; }
+.comment-item span { flex-grow: 1; }
 </style>
 <script>
 // 세션 인증 확인
@@ -15,41 +19,30 @@ window.onload = function() {
   }
 };
 
-// --- 날짜 안전 파서: 다양한 문자열/숫자 형식을 Date로 변환 ---
+// --- 안전한 날짜 파서 ---
 function safeParseDate(val) {
   if (val == null) return null;
-
-  // 숫자(ms) 또는 초/밀리초 숫자 문자열
   if (typeof val === 'number') return new Date(val);
   if (typeof val === 'string') {
     const trimmed = val.trim();
-
-    // 순수 숫자만으로 이루어진 문자열이면 타임스탬프로 간주
     if (/^\d+$/.test(trimmed)) {
       const n = parseInt(trimmed, 10);
-      const ms = trimmed.length < 13 ? n * 1000 : n; // 초 단위면 ms로 변환
+      const ms = trimmed.length < 13 ? n * 1000 : n;
       return new Date(ms);
     }
-
-    // 브라우저 기본 파서 시도 (ISO 8601 등)
     const d1 = new Date(trimmed);
     if (!isNaN(d1)) return d1;
-
-    // 'YYYY. M. D.' 또는 'YYYY. MM. DD.' 형태 (ko-KR 로케일 문자열) 처리
     const m1 = trimmed.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
-    if (m1) return new Date(+m1[1], +m1[2] - 1, +m1[3]);
-
-    // 'YYYY/MM/DD' 또는 'YYYY-MM-DD' 또는 'YYYY.MM.DD' 형태 처리
+    if (m1) return new Date(+m1[1], +m1[2]-1, +m1[3]);
     const m2 = trimmed.match(/^(\d{4})[\/\-.]\s*(\d{1,2})[\/\-.]\s*(\d{1,2})/);
-    if (m2) return new Date(+m2[1], +m2[2] - 1, +m2[3]);
+    if (m2) return new Date(+m2[1], +m2[2]-1, +m2[3]);
   }
-  return null; // 파싱 실패
+  return null;
 }
 
-// 저장소에서 글 불러오기
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-// --- 마이그레이션: createdAt을 일괄적으로 "밀리초 숫자"로 맞춤 ---
+// --- createdAt 보정 ---
 (function migrateCreatedAt(){
   let changed = false;
   posts.forEach(p => {
@@ -61,40 +54,39 @@ let posts = JSON.parse(localStorage.getItem("posts") || "[]");
         changed = true;
       }
     } else {
-      // createdAt이 없거나 파싱 불가하면 현재 시각으로 보정
       p.createdAt = Date.now();
       changed = true;
-      console.warn("createdAt가 없어 현재 시각으로 보정했습니다. post id:", p.id);
     }
   });
-  if (changed) {
-    localStorage.setItem("posts", JSON.stringify(posts));
-  }
+  if (changed) localStorage.setItem("posts", JSON.stringify(posts));
 })();
 
 function renderPosts() {
   const container = document.getElementById("postsContainer");
   container.innerHTML = "";
-
   const nowMs = Date.now();
 
   posts.forEach((p, index) => {
-    // createdAt을 안전하게 밀리초 숫자로 보장
     const ms = typeof p.createdAt === 'number' ? p.createdAt : (safeParseDate(p.createdAt)?.getTime() ?? Date.now());
     const postDate = new Date(ms);
-
-    const diffInDays = (nowMs - ms) / (1000 * 3600 * 24);
-    if (diffInDays > 365) return; // 1년 지난 글은 표시하지 않음
+    const diffInDays = (nowMs - ms) / (1000*3600*24);
+    if (diffInDays > 365) return; // 1년 지난 글은 제외
 
     const div = document.createElement("div");
     div.innerHTML = `
-      <h2>글 번호 ${index + 1}</h2>
+      <h2>글 번호 ${index+1}</h2>
       <textarea id="editContent_${p.id}">${p.content ?? ""}</textarea>
       <p>작성일: ${postDate.toLocaleDateString()}</p>
       <p>조회수: ${p.views ?? 0}</p>
-      <div class="comments">
+      <div class="comment-box">
         <h4>댓글</h4>
-        ${(Array.isArray(p.comments) ? p.comments : []).map(c => `<p>- ${c}</p>`).join('')}
+        ${(Array.isArray(p.comments) ? p.comments : []).map((c, ci) => `
+          <div class="comment-item">
+            <span><input type="text" id="commentEdit_${p.id}_${ci}" value="${c}" style="width:90%"></span>
+            <button onclick="updateComment('${p.id}', ${ci})">수정</button>
+            <button onclick="deleteComment('${p.id}', ${ci})">삭제</button>
+          </div>
+        `).join('')}
         <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
         <button onclick="addComment('${p.id}')">댓글 등록</button>
       </div>
@@ -113,6 +105,23 @@ function addComment(id) {
   post.comments.push(input.value.trim());
   savePosts();
   input.value = "";
+  renderPosts();
+}
+
+function updateComment(postId, idx) {
+  const post = posts.find(p => p.id == postId);
+  if (!post || !Array.isArray(post.comments)) return;
+  const input = document.getElementById(`commentEdit_${postId}_${idx}`);
+  post.comments[idx] = input.value;
+  savePosts();
+  renderPosts();
+}
+
+function deleteComment(postId, idx) {
+  const post = posts.find(p => p.id == postId);
+  if (!post || !Array.isArray(post.comments)) return;
+  post.comments.splice(idx,1);
+  savePosts();
   renderPosts();
 }
 
@@ -141,14 +150,13 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// 게시글 작성 시 작성일을 "숫자 타임스탬프(ms)"로 저장
 function createPost(content) {
   const newPost = {
     id: Date.now().toString(),
     content: content,
     comments: [],
     views: 0,
-    createdAt: Date.now() // <- toISOString() 대신 숫자(ms)로 저장
+    createdAt: Date.now()
   };
   posts.push(newPost);
   savePosts();
