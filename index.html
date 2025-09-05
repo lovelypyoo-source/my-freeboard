@@ -113,7 +113,23 @@ function savePost(){
   const content=document.getElementById("content").value.trim();
   const pw=document.getElementById("pw").value.trim();
   if(!content||pw.length!==4){alert("내용과 4자리 비밀번호를 입력하세요.");return;}
-  posts.push({id:Date.now(), content, pw, views:0, comments:[]});
+
+  const newPost = {
+    id: Date.now().toString(),
+    content,
+    pw,
+    views: 0,
+    comments: [],
+    createdAt: new Date().toISOString() // 작성일 추가
+  };
+
+  posts.push(newPost);
+
+  // 최대 500개까지만 저장
+  if(posts.length > 500){
+    posts = posts.slice(posts.length - 500);
+  }
+
   localStorage.setItem("posts", JSON.stringify(posts));
   alert("글이 등록되었습니다.");
   document.getElementById("forms").innerHTML="";
@@ -124,8 +140,21 @@ function viewMyPost(){
   const inputPw = prompt("작성 시 입력한 비밀번호를 입력하세요:");
   if(!inputPw) return;
   if(inputPw.length!==4){alert("비밀번호는 4자리입니다."); return;}
-  const myPosts = posts.filter(p=>p.pw===inputPw);
-  if(myPosts.length===0){alert("해당 비밀번호로 작성된 글이 없습니다."); return;}
+
+  // 1년 이내 글만 필터
+  const now = new Date();
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+  const myPosts = posts.filter(p=>{
+    return p.pw===inputPw && new Date(p.createdAt) >= oneYearAgo;
+  });
+
+  if(myPosts.length===0){
+    alert("해당 비밀번호로 조회 가능한 글이 없습니다. (1년 이내 글만 조회 가능)");
+    return;
+  }
+
   sessionStorage.setItem("viewPw", inputPw);
   window.location.href="view.html";
 }
