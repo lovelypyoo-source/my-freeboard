@@ -64,13 +64,20 @@ let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 function renderPosts() {
   const container = document.getElementById("postsContainer");
   container.innerHTML = "";
+
   const nowMs = Date.now();
 
   posts.forEach((p, index) => {
-    const ms = typeof p.createdAt === 'number' ? p.createdAt : (safeParseDate(p.createdAt)?.getTime() ?? Date.now());
+    // 안전하게 날짜 변환
+    const ms = typeof p.createdAt === 'number'
+      ? p.createdAt
+      : (safeParseDate(p.createdAt)?.getTime() ?? Date.now());
+
     const postDate = new Date(ms);
-    const diffInDays = (nowMs - ms) / (1000*3600*24);
-    if (diffInDays > 365) return; // 1년 지난 글은 제외
+
+    // 글이 1년 이내면 표시
+    const diffInDays = (nowMs - ms) / (1000 * 3600 * 24);
+    if (diffInDays > 365) return; // 1년 넘으면 제외
 
     const div = document.createElement("div");
     div.innerHTML = `
@@ -78,20 +85,7 @@ function renderPosts() {
       <textarea id="editContent_${p.id}">${p.content ?? ""}</textarea>
       <p>작성일: ${postDate.toLocaleDateString()}</p>
       <p>조회수: ${p.views ?? 0}</p>
-      <div class="comment-box">
-        <h4>댓글</h4>
-        ${(Array.isArray(p.comments) ? p.comments : []).map((c, ci) => `
-          <div class="comment-item">
-            <span><input type="text" id="commentEdit_${p.id}_${ci}" value="${c}" style="width:90%"></span>
-            <button onclick="updateComment('${p.id}', ${ci})">수정</button>
-            <button onclick="deleteComment('${p.id}', ${ci})">삭제</button>
-          </div>
-        `).join('')}
-        <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
-        <button onclick="addComment('${p.id}')">댓글 등록</button>
-      </div>
-      <button onclick="savePost('${p.id}')">저장</button>
-      <button onclick="deletePost('${p.id}')">삭제</button>
+      ...
     `;
     container.appendChild(div);
   });
