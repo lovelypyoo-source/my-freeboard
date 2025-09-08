@@ -5,38 +5,56 @@
 <title>관리자 페이지</title>
 <style>
 body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
-h1 { text-align:center; margin-bottom:30px; }
+h1 { text-align:center; margin-bottom:20px; }
 
-table {
+.post-list {
   width: 100%;
-  border-collapse: collapse;
+  max-width: 800px;
+  margin: 0 auto;
   background: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
-th, td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
+.post-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
 }
-th {
-  background: #f2f2f2;
+.post-item:hover {
+  background: #f7f7f7;
+}
+.post-title {
+  font-weight: bold;
+}
+.post-meta {
+  font-size: 12px;
+  color: #666;
+}
+
+.post-detail {
+  display: none;
+  margin: 20px auto;
+  max-width: 800px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.post-detail h2 {
+  margin-top: 0;
 }
 .comment-box {
-  margin-top: 10px;
-  text-align: left;
+  margin-top: 15px;
 }
 .comment-box p {
-  margin: 3px 0;
+  margin: 5px 0;
 }
 .comment-input {
-  width: 85%;
+  width: 80%;
   padding: 5px;
 }
-button {
-  margin: 2px;
-  padding: 4px 8px;
-  font-size: 13px;
-}
+button { margin: 2px; padding: 4px 8px; font-size: 13px; }
 </style>
 <script>
 // 세션 인증 확인
@@ -51,84 +69,105 @@ window.onload = function() {
 <body>
 <h1>관리자 페이지 - 게시판</h1>
 
-<table id="postsTable">
-  <thead>
-    <tr>
-      <th>번호</th>
-      <th>제목</th>
-      <th>작성자</th>
-      <th>유형</th>
-      <th>작성일</th>
-      <th>조회수</th>
-      <th>댓글/관리</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+<div class="post-list" id="postList"></div>
+
+<div class="post-detail" id="postDetail">
+  <h2 id="detailTitle"></h2>
+  <p id="detailMeta"></p>
+  <p id="detailContent"></p>
+  <div class="comment-box">
+    <h4>댓글</h4>
+    <div id="commentList"></div>
+    <input type="text" id="newComment" class="comment-input" placeholder="댓글 작성">
+    <button id="addCommentBtn">등록</button>
+  </div>
+  <button id="closeDetail">닫기</button>
+</div>
 
 <button onclick="logout()">로그아웃</button>
 
 <script>
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
 
-// 게시글 렌더링
-function renderPosts() {
-  const tbody = document.querySelector("#postsTable tbody");
-  tbody.innerHTML = "";
+// 현재 선택된 글 ID
+let currentPostId = null;
 
-  const currentDate = Date.now();
-  const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
+function renderPostList() {
+  const postList = document.getElementById("postList");
+  postList.innerHTML = "";
+
+  const now = Date.now();
 
   posts
-    .filter(p => (currentDate - (p.createdAt || p.id)) <= ONE_YEAR) // 1년 이내 글만
+    .filter(p => (now - new Date(p.createdAt).getTime()) <= ONE_YEAR) // 1년 이내
     .slice(-500) // 최대 500개
-    .forEach((p, index) => {
-      const postDate = new Date(p.createdAt || p.id);
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${p.title || "(제목 없음)"}</td>
-        <td>${p.author || "익명"}</td>
-        <td>${p.type || "자유"}</td>
-        <td>${postDate.toLocaleString()}</td>
-        <td>${p.views || 0}</td>
-        <td>
-          <div class="comment-box" id="comments_${p.id}">
-            ${p.comments.map((c,i)=>`
-              <p>
-                ${c} 
-                <button onclick="editComment('${p.id}', ${i})">수정</button>
-                <button onclick="deleteComment('${p.id}', ${i})">삭제</button>
-              </p>
-            `).join("")}
-          </div>
-          <input type="text" id="commentInput_${p.id}" class="comment-input" placeholder="댓글 작성">
-          <button onclick="addComment('${p.id}')">등록</button><br>
-          <button onclick="deletePost('${p.id}')">글 삭제</button>
-        </td>
+    .forEach((p, idx) => {
+      const div = document.createElement("div");
+      div.className = "post-item";
+      div.onclick = () => openPost(p.id);
+      div.innerHTML = `
+        <div class="post-title">${p.title || "제목 없음"}</div>
+        <div class="post-meta">
+          작성자: ${p.author || "익명"} | 조회수: ${p.views || 0} | 작성일: ${new Date(p.createdAt).toLocaleString()}
+        </div>
       `;
-
-      tbody.appendChild(tr);
+      postList.appendChild(div);
     });
 }
 
-function addComment(id) {
-  const input = document.getElementById(`commentInput_${id}`);
+function openPost(id) {
   const post = posts.find(p => p.id == id);
+  if (!post) return;
+
+  currentPostId = id;
+  document.getElementById("detailTitle").textContent = post.title || "(제목 없음)";
+  document.getElementById("detailMeta").textContent = 
+    `작성자: ${post.author || "익명"} | 조회수: ${post.views || 0} | 작성일: ${new Date(post.createdAt).toLocaleString()}`;
+  document.getElementById("detailContent").textContent = post.content || "";
+
+  renderComments(post);
+
+  document.getElementById("postDetail").style.display = "block";
+}
+
+function renderComments(post) {
+  const commentList = document.getElementById("commentList");
+  commentList.innerHTML = "";
+
+  post.comments.forEach((c, i) => {
+    const p = document.createElement("p");
+    p.innerHTML = `
+      ${c}
+      <button onclick="editComment('${post.id}', ${i})">수정</button>
+      <button onclick="deleteComment('${post.id}', ${i})">삭제</button>
+    `;
+    commentList.appendChild(p);
+  });
+}
+
+document.getElementById("addCommentBtn").onclick = function() {
+  const input = document.getElementById("newComment");
+  const post = posts.find(p => p.id == currentPostId);
   if (!post || !input.value.trim()) return;
   post.comments.push(input.value.trim());
+  input.value = "";
   savePosts();
-  renderPosts();
-}
+  renderComments(post);
+};
+
+document.getElementById("closeDetail").onclick = function() {
+  document.getElementById("postDetail").style.display = "none";
+  currentPostId = null;
+};
 
 function editComment(postId, commentIndex) {
   const post = posts.find(p => p.id == postId);
   const newComment = prompt("댓글 수정:", post.comments[commentIndex]);
-  if (newComment !== null && newComment.trim() !== "") {
+  if (newComment && newComment.trim()) {
     post.comments[commentIndex] = newComment.trim();
     savePosts();
-    renderPosts();
+    renderComments(post);
   }
 }
 
@@ -137,15 +176,8 @@ function deleteComment(postId, commentIndex) {
   if (confirm("댓글을 삭제하시겠습니까?")) {
     post.comments.splice(commentIndex, 1);
     savePosts();
-    renderPosts();
+    renderComments(post);
   }
-}
-
-function deletePost(id) {
-  if (!confirm("글을 삭제하시겠습니까?")) return;
-  posts = posts.filter(p => p.id != id);
-  savePosts();
-  renderPosts();
 }
 
 function savePosts() {
@@ -158,7 +190,7 @@ function logout() {
   window.location.href = "index.html";
 }
 
-renderPosts();
+renderPostList();
 </script>
 </body>
 </html>
