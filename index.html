@@ -147,8 +147,15 @@ function viewMyPost(){
   oneYearAgo.setFullYear(now.getFullYear() - 1);
 
   const myPosts = posts.filter(p=>{
-    return p.pw===inputPw && new Date(p.createdAt) >= oneYearAgo;
-  });
+  let postDate;
+  if (p.createdAt) {
+    postDate = new Date(p.createdAt);
+  } else {
+    postDate = new Date(parseInt(p.id));
+  }
+  if (isNaN(postDate)) return false;
+  return p.pw===inputPw && postDate >= oneYearAgo;
+});
 
   if(myPosts.length===0){
     alert("해당 비밀번호로 조회 가능한 글이 없습니다. (1년 이내 글만 조회 가능)");
