@@ -4,11 +4,13 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 <style>
-/* 기존 관리자 스타일 그대로 사용 */
-textarea { width: 100%; min-height: 80px; margin-bottom: 10px; }
-.comment-box { margin-top: 10px; padding: 10px; background: #f4f4f4; border-radius: 8px; }
-.comment-item { display: flex; align-items: center; justify-content: space-between; margin: 3px 0; }
-.comment-item span { flex-grow: 1; }
+body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
+h1 { text-align:center; margin-bottom:30px; }
+.post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+textarea { width:100%; min-height:120px; margin-top:10px; }
+button { margin:5px; padding:8px 16px; border:none; border-radius:5px; cursor:pointer; }
+.comments { margin-top:10px; padding-left:10px; border-left:3px solid #ccc; }
+.comments p { margin:4px 0; }
 </style>
 <script>
 // 세션 인증 확인
@@ -16,89 +18,68 @@ window.onload = function() {
   if (sessionStorage.getItem("adminAuth") !== "true") {
     alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
     window.location.href = "index.html";
+  } else {
+    renderPosts();
   }
 };
+</script>
+</head>
+<body>
+<h1>관리자 페이지 - 전체 게시판</h1>
+<div id="postsContainer"></div>
+<button onclick="logout()">로그아웃</button>
 
-// --- 안전한 날짜 파서 ---
-function safeParseDate(val) {
-  if (val == null) return null;
-  if (typeof val === 'number') return new Date(val);
-  if (typeof val === 'string') {
-    const trimmed = val.trim();
-    if (/^\d+$/.test(trimmed)) {
-      const n = parseInt(trimmed, 10);
-      const ms = trimmed.length < 13 ? n * 1000 : n;
-      return new Date(ms);
-    }
-    const d1 = new Date(trimmed);
-    if (!isNaN(d1)) return d1;
-    const m1 = trimmed.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
-    if (m1) return new Date(+m1[1], +m1[2]-1, +m1[3]);
-    const m2 = trimmed.match(/^(\d{4})[\/\-.]\s*(\d{1,2})[\/\-.]\s*(\d{1,2})/);
-    if (m2) return new Date(+m2[1], +m2[2]-1, +m2[3]);
-  }
-  return null;
-}
-
+<script>
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-// --- createdAt 보정 ---
-(function migrateCreatedAt(){
-  let changed = false;
-  posts.forEach(p => {
-    const d = safeParseDate(p.createdAt);
-    if (d) {
-      const ms = d.getTime();
-      if (p.createdAt !== ms) {
-        p.createdAt = ms;
-        changed = true;
-      }
-    } else {
-      p.createdAt = Date.now();
-      changed = true;
-    }
-  });
-  if (changed) localStorage.setItem("posts", JSON.stringify(posts));
-})();
+// 최대 500개까지만 유지
+function enforceLimit() {
+  if (posts.length > 500) {
+    posts = posts.slice(posts.length - 500);
+    savePosts();
+  }
+}
 
 function renderPosts() {
   const container = document.getElementById("postsContainer");
   container.innerHTML = "";
 
-  const nowMs = Date.now();
+  const currentDate = new Date();
 
   posts.forEach((p, index) => {
-    // 안전하게 날짜 변환
-    const ms = typeof p.createdAt === 'number'
-      ? p.createdAt
-      : (safeParseDate(p.createdAt)?.getTime() ?? Date.now());
+    // 작성일 처리 보정
+    let postDate = p.createdAt ? new Date(p.createdAt) : new Date(parseInt(p.id));
+    if (isNaN(postDate)) postDate = new Date();
 
-    const postDate = new Date(ms);
-// 작성일 처리 보정
-let postDate;
-if (p.createdAt) {
-  postDate = new Date(p.createdAt);
-} else {
-  // createdAt이 없으면 id를 시간값으로 사용
-  postDate = new Date(parseInt(p.id));
-}
+    const diffInTime = currentDate - postDate;
+    const diffInDays = diffInTime / (1000 * 3600 * 24);
 
-// 날짜가 유효하지 않으면 그냥 오늘로 보정
-if (isNaN(postDate)) {
-  postDate = new Date();
-}
-
-    // 글이 1년 이내면 표시
-    const diffInDays = (nowMs - ms) / (1000 * 3600 * 24);
-    if (diffInDays > 365) return; // 1년 넘으면 제외
+    // 1년 초과는 표시하지 않음
+    if (diffInDays > 365) return;
 
     const div = document.createElement("div");
+    div.className = "post-card";
     div.innerHTML = `
-      <h2>글 번호 ${index+1}</h2>
-      <textarea id="editContent_${p.id}">${p.content ?? ""}</textarea>
+      <h2>글 번호 ${index + 1}</h2>
+      <textarea id="editContent_${p.id}">${p.content}</textarea>
       <p>작성일: ${postDate.toLocaleDateString()}</p>
-      <p>조회수: ${p.views ?? 0}</p>
-      ...
+      <p>조회수: ${p.views || 0}</p>
+
+      <div class="comments">
+        <h4>댓글</h4>
+        ${p.comments.map((c, i) => `
+          <p>
+            - ${c}
+            <button onclick="editComment('${p.id}', ${i})">수정</button>
+            <button onclick="deleteComment('${p.id}', ${i})">삭제</button>
+          </p>
+        `).join('')}
+        <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
+        <button onclick="addComment('${p.id}')">댓글 등록</button>
+      </div>
+
+      <button onclick="savePost('${p.id}')">저장</button>
+      <button onclick="deletePost('${p.id}')">삭제</button>
     `;
     container.appendChild(div);
   });
@@ -108,26 +89,25 @@ function addComment(id) {
   const input = document.getElementById(`commentInput_${id}`);
   const post = posts.find(p => p.id == id);
   if (!post || !input.value.trim()) return;
-  if (!Array.isArray(post.comments)) post.comments = [];
   post.comments.push(input.value.trim());
   savePosts();
   input.value = "";
   renderPosts();
 }
 
-function updateComment(postId, idx) {
+function editComment(postId, index) {
+  const newText = prompt("댓글을 수정하세요:");
+  if (newText === null) return;
   const post = posts.find(p => p.id == postId);
-  if (!post || !Array.isArray(post.comments)) return;
-  const input = document.getElementById(`commentEdit_${postId}_${idx}`);
-  post.comments[idx] = input.value;
+  post.comments[index] = newText.trim();
   savePosts();
   renderPosts();
 }
 
-function deleteComment(postId, idx) {
+function deleteComment(postId, index) {
+  if (!confirm("댓글을 삭제하시겠습니까?")) return;
   const post = posts.find(p => p.id == postId);
-  if (!post || !Array.isArray(post.comments)) return;
-  post.comments.splice(idx,1);
+  post.comments.splice(index, 1);
   savePosts();
   renderPosts();
 }
@@ -157,25 +137,23 @@ function logout() {
   window.location.href = "index.html";
 }
 
+// 게시글 작성 시 createdAt 저장
 function createPost(content) {
   const newPost = {
     id: Date.now().toString(),
     content: content,
     comments: [],
     views: 0,
-    createdAt: Date.now()
+    createdAt: new Date().toISOString()
   };
   posts.push(newPost);
+  enforceLimit();
   savePosts();
   renderPosts();
 }
 
-document.addEventListener('DOMContentLoaded', renderPosts);
+// 초기화
+enforceLimit();
 </script>
-</head>
-<body>
-<h1>관리자 페이지 - 전체 게시판</h1>
-<div id="postsContainer"></div>
-<button onclick="logout()">로그아웃</button>
 </body>
 </html>
