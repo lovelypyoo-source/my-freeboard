@@ -74,6 +74,19 @@ function renderPosts() {
       : (safeParseDate(p.createdAt)?.getTime() ?? Date.now());
 
     const postDate = new Date(ms);
+// 작성일 처리 보정
+let postDate;
+if (p.createdAt) {
+  postDate = new Date(p.createdAt);
+} else {
+  // createdAt이 없으면 id를 시간값으로 사용
+  postDate = new Date(parseInt(p.id));
+}
+
+// 날짜가 유효하지 않으면 그냥 오늘로 보정
+if (isNaN(postDate)) {
+  postDate = new Date();
+}
 
     // 글이 1년 이내면 표시
     const diffInDays = (nowMs - ms) / (1000 * 3600 * 24);
