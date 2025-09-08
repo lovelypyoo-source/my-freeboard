@@ -4,58 +4,64 @@
 <meta charset="UTF-8">
 <title>내 글 조회</title>
 <style>
-body { font-family: Arial, sans-serif; padding:20px; background:#f0f0f0; }
-h1 { text-align:center; }
-.post { background:#fff; padding:15px; margin:20px auto; border-radius:10px; max-width:600px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-.comments { margin-top:10px; padding-top:10px; border-top:1px solid #ddd; }
+body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
+h1 { text-align:center; margin-bottom:30px; }
+
+.post-card {
+  background:#fff;
+  padding:20px;
+  margin-bottom:20px;
+  border-radius:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+.post-card h3 { margin:0 0 10px; }
+.post-card p { margin:5px 0; }
 </style>
 </head>
 <body>
-  <h1>내 글 조회</h1>
-  <div id="posts"></div>
+<h1>내 글 조회</h1>
+<div id="postList"></div>
 
 <script>
-let posts=JSON.parse(localStorage.getItem("posts")||"[]");
-let pw=sessionStorage.getItem("viewPw");
+let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+const viewPw = sessionStorage.getItem("viewPw");
+const container = document.getElementById("postList");
 
-if(!pw){
-  alert("비밀번호 인증 후 이용하세요.");
-  window.location.href="index.html";
-}
+// 1년 제한 계산
+const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
+const now = Date.now();
 
-const myPosts=posts.filter(p=>p.pw===pw);
+// 비밀번호로 글 필터
+let myPosts = posts.filter(p => p.pw === viewPw);
 
-if(myPosts.length===0){
-  alert("해당 비밀번호로 작성된 글이 없습니다.");
-  window.location.href="index.html";
-}else{
-  const latestPost=myPosts[myPosts.length-1];
-  renderSinglePost(latestPost);
-}
-const createdAt = post.createdAt 
-  ? new Date(post.createdAt) 
-  : new Date(parseInt(post.id));
+// 1년 이내 글만 필터
+myPosts = myPosts.filter(p => {
+  const createdAt = p.createdAt || p.id;
+  return (now - createdAt) <= ONE_YEAR;
+});
 
-const createdText = isNaN(createdAt) 
-  ? "작성일 정보 없음" 
-  : createdAt.toLocaleDateString();
+if (myPosts.length === 0) {
+  container.innerHTML = "<p>조회 가능한 글이 없습니다.</p>";
+} else {
+  myPosts.forEach(post => {
+    post.views = (post.views || 0) + 1; // 조회수 증가
 
-function renderSinglePost(post){
-  const postsDiv=document.getElementById("posts");
-  postsDiv.innerHTML="";
-  post.views++;
-  const div=document.createElement("div");
-  div.className="post";
-  div.innerHTML=`
-    <p>${post.content}</p>
-    <p>조회수: ${post.views}</p>
-    <div class="comments">
-      <h4>댓글</h4>
-      ${post.comments.map(c=>`<p>- ${c}</p>`).join("") || "<p>댓글 없음</p>"}
-    </div>
-  `;
-  postsDiv.appendChild(div);
-  localStorage.setItem("posts",JSON.stringify(posts));
+    const postCard = document.createElement("div");
+    postCard.className = "post-card";
+
+    const dateStr = new Date(post.createdAt || post.id).toLocaleString();
+
+    postCard.innerHTML = `
+      <h3>작성일: ${dateStr}</h3>
+      <p>${post.content}</p>
+      <p><strong>조회수:</strong> ${post.views}</p>
+    `;
+
+    container.appendChild(postCard);
+  });
+
+  // 변경 저장 (조회수 반영)
+  localStorage.setItem("posts", JSON.stringify(posts));
 }
 </script>
 </body>
