@@ -32,6 +32,13 @@ if(myPosts.length===0){
   const latestPost=myPosts[myPosts.length-1];
   renderSinglePost(latestPost);
 }
+const createdAt = post.createdAt 
+  ? new Date(post.createdAt) 
+  : new Date(parseInt(post.id));
+
+const createdText = isNaN(createdAt) 
+  ? "작성일 정보 없음" 
+  : createdAt.toLocaleDateString();
 
 function renderSinglePost(post){
   const postsDiv=document.getElementById("posts");
