@@ -4,13 +4,43 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 <style>
-body { font-family: Arial,sans-serif; padding:20px; background:#f9f9f9; }
+body { font-family: Arial, sans-serif; padding:20px; background:#f9f9f9; }
 h1 { text-align:center; margin-bottom:30px; }
-.post-card { background:#fff; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-textarea { width:100%; min-height:120px; margin-top:10px; }
-button { margin:5px; padding:8px 16px; border:none; border-radius:5px; cursor:pointer; }
-.comments { margin-top:10px; padding-left:10px; border-left:3px solid #ccc; }
-.comments p { margin:4px 0; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+th {
+  background: #f2f2f2;
+}
+textarea {
+  width: 100%;
+  height: 80px;
+}
+button {
+  margin: 2px;
+  padding: 5px 10px;
+  font-size: 14px;
+}
+.comment-box {
+  margin-top: 10px;
+  text-align: left;
+}
+.comment-box p {
+  margin: 3px 0;
+}
+.comment-input {
+  width: 90%;
+  padding: 5px;
+}
 </style>
 <script>
 // 세션 인증 확인
@@ -18,71 +48,73 @@ window.onload = function() {
   if (sessionStorage.getItem("adminAuth") !== "true") {
     alert("잘못된 접근입니다. 메인 페이지에서 로그인 후 이용하세요.");
     window.location.href = "index.html";
-  } else {
-    renderPosts();
   }
-};
+}
 </script>
 </head>
 <body>
 <h1>관리자 페이지 - 전체 게시판</h1>
-<div id="postsContainer"></div>
+
+<table id="postsTable">
+  <thead>
+    <tr>
+      <th>번호</th>
+      <th>내용</th>
+      <th>작성일</th>
+      <th>조회수</th>
+      <th>댓글</th>
+      <th>관리</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
 <button onclick="logout()">로그아웃</button>
 
 <script>
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-// 최대 500개까지만 유지
-function enforceLimit() {
-  if (posts.length > 500) {
-    posts = posts.slice(posts.length - 500);
-    savePosts();
-  }
-}
-
+// 게시글 렌더링
 function renderPosts() {
-  const container = document.getElementById("postsContainer");
-  container.innerHTML = "";
+  const tbody = document.querySelector("#postsTable tbody");
+  tbody.innerHTML = "";
 
-  const currentDate = new Date();
+  const currentDate = Date.now();
+  const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
 
-  posts.forEach((p, index) => {
-    // 작성일 처리 보정
-    let postDate = p.createdAt ? new Date(p.createdAt) : new Date(parseInt(p.id));
-    if (isNaN(postDate)) postDate = new Date();
+  posts
+    .filter(p => (currentDate - (p.createdAt || p.id)) <= ONE_YEAR) // 1년 이내 글만
+    .slice(-500) // 최대 500개
+    .forEach((p, index) => {
+      const postDate = new Date(p.createdAt || p.id);
+      const tr = document.createElement("tr");
 
-    const diffInTime = currentDate - postDate;
-    const diffInDays = diffInTime / (1000 * 3600 * 24);
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td><textarea id="editContent_${p.id}">${p.content}</textarea></td>
+        <td>${postDate.toLocaleString()}</td>
+        <td>${p.views || 0}</td>
+        <td>
+          <div class="comment-box" id="comments_${p.id}">
+            ${p.comments.map((c,i)=>`
+              <p>
+                ${c} 
+                <button onclick="editComment('${p.id}', ${i})">수정</button>
+                <button onclick="deleteComment('${p.id}', ${i})">삭제</button>
+              </p>
+            `).join("")}
+          </div>
+          <input type="text" id="commentInput_${p.id}" class="comment-input" placeholder="댓글 작성">
+          <button onclick="addComment('${p.id}')">등록</button>
+        </td>
+        <td>
+          <button onclick="savePost('${p.id}')">저장</button>
+          <button onclick="deletePost('${p.id}')">삭제</button>
+        </td>
+      `;
 
-    // 1년 초과는 표시하지 않음
-    if (diffInDays > 365) return;
-
-    const div = document.createElement("div");
-    div.className = "post-card";
-    div.innerHTML = `
-      <h2>글 번호 ${index + 1}</h2>
-      <textarea id="editContent_${p.id}">${p.content}</textarea>
-      <p>작성일: ${postDate.toLocaleDateString()}</p>
-      <p>조회수: ${p.views || 0}</p>
-
-      <div class="comments">
-        <h4>댓글</h4>
-        ${p.comments.map((c, i) => `
-          <p>
-            - ${c}
-            <button onclick="editComment('${p.id}', ${i})">수정</button>
-            <button onclick="deleteComment('${p.id}', ${i})">삭제</button>
-          </p>
-        `).join('')}
-        <input type="text" id="commentInput_${p.id}" placeholder="댓글 작성">
-        <button onclick="addComment('${p.id}')">댓글 등록</button>
-      </div>
-
-      <button onclick="savePost('${p.id}')">저장</button>
-      <button onclick="deletePost('${p.id}')">삭제</button>
-    `;
-    container.appendChild(div);
-  });
+      tbody.appendChild(tr);
+    });
 }
 
 function addComment(id) {
@@ -91,25 +123,26 @@ function addComment(id) {
   if (!post || !input.value.trim()) return;
   post.comments.push(input.value.trim());
   savePosts();
-  input.value = "";
   renderPosts();
 }
 
-function editComment(postId, index) {
-  const newText = prompt("댓글을 수정하세요:");
-  if (newText === null) return;
+function editComment(postId, commentIndex) {
   const post = posts.find(p => p.id == postId);
-  post.comments[index] = newText.trim();
-  savePosts();
-  renderPosts();
+  const newComment = prompt("댓글 수정:", post.comments[commentIndex]);
+  if (newComment !== null && newComment.trim() !== "") {
+    post.comments[commentIndex] = newComment.trim();
+    savePosts();
+    renderPosts();
+  }
 }
 
-function deleteComment(postId, index) {
-  if (!confirm("댓글을 삭제하시겠습니까?")) return;
+function deleteComment(postId, commentIndex) {
   const post = posts.find(p => p.id == postId);
-  post.comments.splice(index, 1);
-  savePosts();
-  renderPosts();
+  if (confirm("댓글을 삭제하시겠습니까?")) {
+    post.comments.splice(commentIndex, 1);
+    savePosts();
+    renderPosts();
+  }
 }
 
 function savePost(id) {
@@ -121,7 +154,7 @@ function savePost(id) {
 }
 
 function deletePost(id) {
-  if (!confirm("삭제하시겠습니까?")) return;
+  if (!confirm("글을 삭제하시겠습니까?")) return;
   posts = posts.filter(p => p.id != id);
   savePosts();
   renderPosts();
@@ -137,23 +170,7 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// 게시글 작성 시 createdAt 저장
-function createPost(content) {
-  const newPost = {
-    id: Date.now().toString(),
-    content: content,
-    comments: [],
-    views: 0,
-    createdAt: new Date().toISOString()
-  };
-  posts.push(newPost);
-  enforceLimit();
-  savePosts();
-  renderPosts();
-}
-
-// 초기화
-enforceLimit();
+renderPosts();
 </script>
 </body>
 </html>
