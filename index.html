@@ -136,6 +136,12 @@ function savePost(){
   document.getElementById("forms").innerHTML="";
 }
 
+
+  localStorage.setItem("posts", JSON.stringify(posts));
+  alert("글이 등록되었습니다.");
+  document.getElementById("forms").innerHTML="";
+}
+
   // 최대 500개까지만 저장
   if(posts.length > 500){
     posts = posts.slice(posts.length - 500);
