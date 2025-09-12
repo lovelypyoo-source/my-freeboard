@@ -112,18 +112,29 @@ function showWriteForm(){
 function savePost(){
   const content=document.getElementById("content").value.trim();
   const pw=document.getElementById("pw").value.trim();
-  if(!content||pw.length!==4){alert("내용과 4자리 비밀번호를 입력하세요.");return;}
-
+  if(!content||pw.length!==4){
+    alert("내용과 4자리 비밀번호를 입력하세요.");
+    return;
+  }
   const newPost = {
-    id: Date.now().toString(),
+    id: Date.now(),
     content,
     pw,
     views: 0,
     comments: [],
-    createdAt: new Date().toISOString() // 작성일 추가
+    createdAt: new Date().toISOString() // 작성일 무조건 저장
   };
-
   posts.push(newPost);
+
+  // 500개 초과 방지 (오래된 글 제거)
+  if(posts.length > 500){
+    posts = posts.slice(posts.length - 500);
+  }
+
+  localStorage.setItem("posts", JSON.stringify(posts));
+  alert("글이 등록되었습니다.");
+  document.getElementById("forms").innerHTML="";
+}
 
   // 최대 500개까지만 저장
   if(posts.length > 500){
