@@ -64,35 +64,15 @@ window.onload = function() {
     window.location.href = "index.html";
   }
 }
-</script>
-</head>
-<body>
-<h1>관리자 페이지 - 게시판</h1>
 
-<div class="post-list" id="postList"></div>
-
-<div class="post-detail" id="postDetail">
-  <h2 id="detailTitle"></h2>
-  <p id="detailMeta"></p>
-  <p id="detailContent"></p>
-  <div class="comment-box">
-    <h4>댓글</h4>
-    <div id="commentList"></div>
-    <input type="text" id="newComment" class="comment-input" placeholder="댓글 작성">
-    <button id="addCommentBtn">등록</button>
-  </div>
-  <button id="closeDetail">닫기</button>
-</div>
-
-<button onclick="logout()">로그아웃</button>
-
-<script>
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+// 데이터 로드 및 저장
+let posts = JSON.parse(localStorage.getItem("posts") || "[]"); // 저장된 데이터가 없으면 빈 배열로 초기화
 const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
 
 // 현재 선택된 글 ID
 let currentPostId = null;
 
+// 글 목록 렌더링
 function renderPostList() {
   const postList = document.getElementById("postList");
   postList.innerHTML = "";
@@ -116,6 +96,7 @@ function renderPostList() {
     });
 }
 
+// 글 상세보기
 function openPost(id) {
   const post = posts.find(p => p.id == id);
   if (!post) return;
@@ -131,6 +112,7 @@ function openPost(id) {
   document.getElementById("postDetail").style.display = "block";
 }
 
+// 댓글 렌더링
 function renderComments(post) {
   const commentList = document.getElementById("commentList");
   commentList.innerHTML = "";
@@ -146,6 +128,7 @@ function renderComments(post) {
   });
 }
 
+// 댓글 추가
 document.getElementById("addCommentBtn").onclick = function() {
   const input = document.getElementById("newComment");
   const post = posts.find(p => p.id == currentPostId);
@@ -156,11 +139,7 @@ document.getElementById("addCommentBtn").onclick = function() {
   renderComments(post);
 };
 
-document.getElementById("closeDetail").onclick = function() {
-  document.getElementById("postDetail").style.display = "none";
-  currentPostId = null;
-};
-
+// 댓글 수정
 function editComment(postId, commentIndex) {
   const post = posts.find(p => p.id == postId);
   const newComment = prompt("댓글 수정:", post.comments[commentIndex]);
@@ -171,6 +150,7 @@ function editComment(postId, commentIndex) {
   }
 }
 
+// 댓글 삭제
 function deleteComment(postId, commentIndex) {
   const post = posts.find(p => p.id == postId);
   if (confirm("댓글을 삭제하시겠습니까?")) {
@@ -180,10 +160,12 @@ function deleteComment(postId, commentIndex) {
   }
 }
 
+// 게시글 저장
 function savePosts() {
   localStorage.setItem("posts", JSON.stringify(posts));
 }
 
+// 로그아웃
 function logout() {
   sessionStorage.removeItem("adminAuth");
   alert("로그아웃 되었습니다.");
@@ -192,5 +174,25 @@ function logout() {
 
 renderPostList();
 </script>
+</head>
+<body>
+<h1>관리자 페이지 - 게시판</h1>
+
+<div class="post-list" id="postList"></div>
+
+<div class="post-detail" id="postDetail">
+  <h2 id="detailTitle"></h2>
+  <p id="detailMeta"></p>
+  <p id="detailContent"></p>
+  <div class="comment-box">
+    <h4>댓글</h4>
+    <div id="commentList"></div>
+    <input type="text" id="newComment" class="comment-input" placeholder="댓글 작성">
+    <button id="addCommentBtn">등록</button>
+  </div>
+  <button id="closeDetail">닫기</button>
+</div>
+
+<button onclick="logout()">로그아웃</button>
 </body>
 </html>
