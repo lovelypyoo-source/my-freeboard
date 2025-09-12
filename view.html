@@ -63,6 +63,20 @@ if (myPosts.length === 0) {
   // 변경 저장 (조회수 반영)
   localStorage.setItem("posts", JSON.stringify(posts));
 }
+  // createdAt 없으면 id로 보정
+posts.forEach(p => {
+  if (!p.createdAt) {
+    p.createdAt = new Date(p.id).toISOString();
+  }
+});
+
+// 1년 이내 글만 필터
+let recentPosts = posts.filter(p => {
+  const createdAt = Date.parse(p.createdAt);
+  if (isNaN(createdAt)) return false; // 잘못된 날짜 제외
+  return (now - createdAt) <= ONE_YEAR;
+});
+
 </script>
 </body>
 </html>
